@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/modal.css" />
     <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Handlee&family=Indie+Flower&display=swap"
       rel="stylesheet"
     />
@@ -16,7 +20,7 @@
   <body>
     <div class="navigation-bar">
       <div class="navigation-container">
-        <img src="images/note.png" />
+        <i class="fa-solid fa-note-sticky" style="color: white; font-size: 40px; float: left; padding: 22px 10px 10px 0px;"></i>
         <h1>Notaty</h1>
         <span id="userDisplay"></span>
         <button id="logoutBtn" style="display:none;" class="action-button">Logout</button>
@@ -53,13 +57,15 @@
     <!-- Notes table -->
     <table id="notes-table">
       <colgroup>
-        <col span="1" style="width: 15%;" />
-        <col span="1" style="width: 15%;" />
-        <col span="1" style="width: 40%;" />
-        <col span="1" style="width: 20%;" />
         <col span="1" style="width: 5%;" />
+        <col span="1" style="width: 15%;" />
+        <col span="1" style="width: 10%;" />
+        <col span="1" style="width: 45%;" />
+        <col span="1" style="width: 15%;" />
+        <col span="1" style="width: 10%;" />
       </colgroup>
       <tr>
+        <th>Pin</th>
         <th>Title</th>
         <th>Category</th>
         <th>Content</th>

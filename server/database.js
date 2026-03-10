@@ -57,7 +57,7 @@ class Database {
 
   async getNotes(userId, limit = 10, offset = 0) {
     await this.ensureConnected();
-    return await Note.find({ userId }).limit(limit).skip(offset);
+    return await Note.find({ userId }).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 
   async getNoteById(id) {
@@ -81,7 +81,7 @@ class Database {
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedQuery, 'i');
     const dbQuery = { userId, $or: [{ title: regex }, { content: regex }, { category: regex }] };
-    return await Note.find(dbQuery).limit(limit).skip(offset);
+    return await Note.find(dbQuery).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 
   async createUser(user) {

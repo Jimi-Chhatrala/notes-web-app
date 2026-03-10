@@ -24,7 +24,7 @@ function updateNotesTable(noteId, q) {
     }
     window.AppAPI.getNotes(q).then((data) => {
       data.forEach((note) => {
-        insertRowAtTop(table, note);
+        appendRowToTable(table, note);
       });
     }).then(() => {
       if (noteId) {
@@ -129,35 +129,46 @@ function showToast(message, timeout = 3500) {
 }
 
 // Helpers to insert/update rows safely (avoid innerHTML for user content)
-function insertRowAtTop(table, note) {
-  const row = table.insertRow(1);
+function appendRowToTable(table, note) {
+  const row = table.insertRow(-1);
   row.id = note._id;
   const cell0 = row.insertCell(0);
   const cell1 = row.insertCell(1);
   const cell2 = row.insertCell(2);
   const cell3 = row.insertCell(3);
   const cell4 = row.insertCell(4);
-  cell0.textContent = note.title;
-  cell1.textContent = note.category || 'General';
-  cell2.textContent = note.content;
-  cell3.textContent = new Date(note.updatedAt).toLocaleString();
-  cell4.innerHTML = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer;"><img src="images/edit.png" style="width: 22px;"></a>\n                       <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer;"><img src="images/delete.png" style="width: 22px;"></a>`;
+  const cell5 = row.insertCell(5);
+  
+  // Render pin button based on isPinned property
+  const pinStyle = note.isPinned ? 'color: #e6b800; opacity: 1;' : 'color: #555; opacity: 0.5;';
+  cell0.innerHTML = `<a class="pin-btn" data-note-id="${note._id}" style="cursor: pointer; ${pinStyle}"><i class="fa-solid fa-thumbtack" style="font-size: 20px;"></i></a>`;
+
+  cell1.textContent = note.title;
+  cell2.textContent = note.category || 'General';
+  cell3.textContent = note.content;
+  cell4.textContent = new Date(note.updatedAt).toLocaleString();
+  cell5.innerHTML = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
+                     <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
 }
 
 function updateOrInsertRow(table, note) {
   const existing = document.getElementById(note._id);
   if (existing) {
-    existing.cells[0].textContent = note.title;
-    existing.cells[1].textContent = note.category || 'General';
-    existing.cells[2].textContent = note.content;
-    existing.cells[3].textContent = new Date(note.updatedAt).toLocaleString();
+    const pinStyle = note.isPinned ? 'color: #e6b800; opacity: 1;' : 'color: #555; opacity: 0.5;';
+    existing.cells[0].innerHTML = `<a class="pin-btn" data-note-id="${note._id}" style="cursor: pointer; ${pinStyle}"><i class="fa-solid fa-thumbtack" style="font-size: 20px;"></i></a>`;
+    existing.cells[1].textContent = note.title;
+    existing.cells[2].textContent = note.category || 'General';
+    existing.cells[3].textContent = note.content;
+    existing.cells[4].textContent = new Date(note.updatedAt).toLocaleString();
     // update action cell attributes
+    const pin = existing.querySelector('.pin-btn');
     const edit = existing.querySelector('.edit-btn');
     const del = existing.querySelector('.delete-btn');
+    if (pin) pin.setAttribute('data-note-id', note._id);
     if (edit) edit.setAttribute('data-note-id', note._id);
     if (del) del.setAttribute('data-note-id', note._id);
   } else {
-    insertRowAtTop(table, note);
+    appendRowToTable(table, note);
   }
 }
 
@@ -199,14 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const notesTable = document.getElementById('notes-table');
   if (notesTable) {
     notesTable.addEventListener('click', (ev) => {
-      const edit = ev.target.closest && ev.target.closest('.edit-btn');
+      const edit = ev.target.closest ? ev.target.closest('.edit-btn') : null;
       if (edit) {
         ev.preventDefault();
         const id = edit.getAttribute('data-note-id');
         openEditModal(id);
         return;
       }
-      const del = ev.target.closest && ev.target.closest('.delete-btn');
+      const del = ev.target.closest ? ev.target.closest('.delete-btn') : null;
       if (del) {
         ev.preventDefault();
         const id = del.getAttribute('data-note-id');
@@ -219,6 +230,22 @@ document.addEventListener('DOMContentLoaded', () => {
             updateNotesTable();
           });
         }
+        return;
+      }
+      
+      const pin = ev.target.closest ? ev.target.closest('.pin-btn') : null;
+      if (pin) {
+        ev.preventDefault();
+        const id = pin.getAttribute('data-note-id');
+        window.AppAPI.getNoteById(id).then((note) => {
+          if (note) {
+            note.isPinned = !note.isPinned;
+            window.AppAPI.updateNote(note).then(() => {
+              // Full refresh to ensure correct sorting from backend
+              updateNotesTable();
+            });
+          }
+        });
         return;
       }
     });

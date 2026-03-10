@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- API base URL (overwrite in production or env builds) -->
+    <!-- <meta name="api-base-url" content="http://localhost:3000" /> -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Handlee&family=Indie+Flower&display=swap"
+      rel="stylesheet"
+    />
+    <title>Notaty</title>
+  </head>
+  <body>
+    <div class="navigation-bar">
+      <div class="navigation-container">
+        <img src="images/note.png" />
+        <h1>Notaty</h1>
+        <span id="userDisplay"></span>
+        <button id="logoutBtn" style="display:none;" class="action-button">Logout</button>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div>
+      <button
+        id="addBtn"
+        class="action-button"
+        type="button">
+        Add
+      </button>
+      <input
+        id="searchInput"
+        type="text"
+        class="search-input"
+        placeholder="Search for notes by title, content, or category ..."/>
+      <button id="searchBtn" type="button" class="action-button">Search</button>
+    </div>
+
+    <!-- Status banner -->
+    <div id="status-banner" style="display:none;">
+      <span id="status-message">Backend unavailable</span>
+      <button id="reconnectBtn" class="reconnect-btn" type="button">Reconnect</button>
+    </div>
+    <div id="auth-banner" style="display:none;">
+      <span>Please log in to access your notes</span>
+      <button id="loginBtn" class="action-button" type="button">Login</button>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Notes table -->
+    <table id="notes-table">
+      <colgroup>
+        <col span="1" style="width: 15%;" />
+        <col span="1" style="width: 15%;" />
+        <col span="1" style="width: 40%;" />
+        <col span="1" style="width: 20%;" />
+        <col span="1" style="width: 5%;" />
+      </colgroup>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Content</th>
+        <th>Last Updated</th>
+        <th></th>
+      </tr>
+    </table>
+
+    <!-- Add Note Modal -->
+    <div id="addNoteModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeAdd" class="close">&times;</span>
+          <h2>New Note</h2>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="left">
+              <p>Title</p>
+            </div>
+            <div class="right">
+              <input id="addTitle" type="text" class="modal-input" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Category</p>
+            </div>
+            <div class="right">
+              <input id="addCategory" type="text" class="modal-input" placeholder="General" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Content</p>
+            </div>
+            <div class="right">
+              <textarea id="addContent"></textarea>
+            </div>
+          </div>
+          <p id="addError" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="saveAddNoteBtn"
+            type="button"
+            class="action-button">Save
+          </button>
+          <button id="cancelAddNoteBtn" type="button" class="action-button">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Note Modal -->
+    <div id="editNoteModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeEdit" class="close">&times;</span>
+          <h2>Edit Note</h2>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="left">
+              <p>Title</p>
+            </div>
+            <div class="right">
+              <input id="editTitle" type="text" class="modal-input" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Category</p>
+            </div>
+            <div class="right">
+              <input id="editCategory" type="text" class="modal-input" placeholder="General" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Content</p>
+            </div>
+            <div class="right">
+              <textarea id="editContent"></textarea>
+            </div>
+          </div>
+          <p id="editError" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button id="saveEditNoteBtn" type="button" class="action-button">
+            Save
+          </button>
+          <button id="cancelEditNoteBtn" type="button" class="action-button">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeLogin" class="close">&times;</span>
+          <h2>Login</h2>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="left">
+              <p>Username</p>
+            </div>
+            <div class="right">
+              <input id="loginUsername" type="text" class="modal-input" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Password</p>
+            </div>
+            <div class="right">
+              <input id="loginPassword" type="password" class="modal-input" />
+            </div>
+          </div>
+          <p id="loginError" class="error"></p>
+          <p>Don't have an account? <a href="#" id="showRegister">Register</a></p>
+        </div>
+        <div class="modal-footer">
+          <button id="loginSubmitBtn" type="button" class="action-button">Login</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeRegister" class="close">&times;</span>
+          <h2>Register</h2>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="left">
+              <p>Username</p>
+            </div>
+            <div class="right">
+              <input id="registerUsername" type="text" class="modal-input" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <p>Password</p>
+            </div>
+            <div class="right">
+              <input id="registerPassword" type="password" class="modal-input" />
+            </div>
+          </div>
+          <p id="registerError" class="error"></p>
+          <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+        </div>
+        <div class="modal-footer">
+          <button id="registerSubmitBtn" type="button" class="action-button">Register</button>
+        </div>
+      </div>
+    </div>
+    <script src="note-client.js"></script>
+    <script src="note-handler.js"></script>
+    <script src="modal-handler.js"></script>
+  </body>
+</html>

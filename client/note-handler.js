@@ -3,7 +3,7 @@ function updateNotesTable(noteId, q) {
 
   // If a single noteId is provided and no q filter, update/insert that row only
   if (noteId && !q) {
-    getNoteById(noteId).then((note) => {
+    window.AppAPI.getNoteById(noteId).then((note) => {
       if (!note) return;
       updateOrInsertRow(table, note);
       const row = document.getElementById(noteId);
@@ -22,7 +22,7 @@ function updateNotesTable(noteId, q) {
     while (--rowCount) {
       table.deleteRow(rowCount);
     }
-    getNotes(q).then((data) => {
+    window.AppAPI.getNotes(q).then((data) => {
       data.forEach((note) => {
         insertRowAtTop(table, note);
       });
@@ -45,7 +45,7 @@ function confirmDeleteNote(noteId) {
   const action = confirm('Are you sure you want to delete this note?');
   if (action == true) {
     console.log('Attempting to delete note:', noteId);
-    deleteNote(noteId).then((response) => {
+    window.AppAPI.deleteNote(noteId).then((response) => {
       console.log('Delete response status:', response.status);
       if (response.ok) {
         // remove the deleted row from table if present
@@ -86,7 +86,7 @@ function startAutoRetry() {
     autoRetryAttempt += 1;
     // update banner with attempt count
     updateStatusBanner({ status: 'unavailable' }, autoRetryAttempt);
-    getHealth().then((info) => {
+    window.AppAPI.getHealth().then((info) => {
       if (info && info.status === 'ok') {
         stopAutoRetry();
         updateStatusBanner(info);
@@ -187,6 +187,7 @@ function updateStatusBanner(info, attempt = 0) {
 // Poll /health every 8 seconds
 // Initialize UI wiring once DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  const authToken = window.AppAPI.getAuthToken();
   if (!authToken) {
     showAuthBanner();
     return;
@@ -211,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = del.getAttribute('data-note-id');
         const action = confirm('Are you sure you want to delete this note?');
         if (action) {
-          deleteNote(id).then(() => {
+          window.AppAPI.deleteNote(id).then(() => {
             const row = document.getElementById(id);
             if (row) row.parentNode.removeChild(row);
           }).catch(() => {
@@ -224,12 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Health polling and reconnect handling
-  if (typeof getHealth === 'function') {
+  if (typeof window.AppAPI.getHealth === 'function') {
     // Track last health to avoid unnecessary full refreshes
     let lastHealthOk = false;
 
     function checkHealthAndMaybeLoad() {
-      getHealth().then((info) => {
+      window.AppAPI.getHealth().then((info) => {
         const ok = info && info.status === 'ok';
         if (ok) {
           stopAutoRetry();
@@ -254,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stopAutoRetry();
         // show spinner
         reconnectBtn.innerHTML = '<span class="spinner"></span> Trying...';
-        getHealth().then((info) => {
+        window.AppAPI.getHealth().then((info) => {
           updateStatusBanner(info);
           if (info && info.status === 'ok') {
             updateNotesTable();

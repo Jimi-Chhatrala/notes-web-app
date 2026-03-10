@@ -1,5 +1,5 @@
 function openAddModal() {
-  if (!authToken) {
+  if (!window.AppAPI.getAuthToken()) {
     showAuthBanner();
     return;
   }
@@ -49,7 +49,7 @@ function saveNewNote() {
   }
   const categoryStr = document.getElementById('addCategory').value.trim() || 'General';
   const noteData = { title: titleStr, content: contentStr, category: categoryStr };
-  addNote(noteData)
+  window.AppAPI.addNote(noteData)
     .then((response) => {
       if (response.ok) {
         const modal = document.getElementById('addNoteModal');
@@ -141,7 +141,7 @@ function loadNoteData(noteId) {
   const noteIdAttribute = document.createAttribute('noteid');
   noteIdAttribute.value = noteId;
   modal.setAttributeNode(noteIdAttribute);
-  getNoteById(noteId).then((data) => {
+  window.AppAPI.getNoteById(noteId).then((data) => {
     document.getElementById('editTitle').value = data.title;
     document.getElementById('editCategory').value = data.category || 'General';
     document.getElementById('editContent').value = data.content;
@@ -171,7 +171,7 @@ function saveEditNote() {
   }
   const categoryStr = document.getElementById('editCategory').value.trim() || 'General';
   const noteData = { _id: noteId, title: titleStr, content: contentStr, category: categoryStr };
-  updateNote(noteData)
+  window.AppAPI.updateNote(noteData)
     .then((response) => {
       if (response.ok) {
         const modal = document.getElementById('editNoteModal');
@@ -230,15 +230,13 @@ function submitLogin() {
     document.getElementById('loginError').innerHTML = 'Username and password required';
     return;
   }
-  login({ username, password }).then(response => {
+  window.AppAPI.login({ username, password }).then(response => {
     if (response.ok) {
       response.json().then(data => {
-        authToken = data.token;
-        localStorage.setItem('authToken', authToken);
+        window.AppAPI.setAuthToken(data.token);
         // Decode token to get username (without verification, for display only)
-        const payload = JSON.parse(atob(authToken.split('.')[1]));
-        currentUsername = payload.username;
-        localStorage.setItem('username', currentUsername);
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+        window.AppAPI.setCurrentUsername(payload.username);
         document.getElementById('loginModal').style.display = 'none';
         hideAuthBanner();
         const logoutBtn = document.getElementById('logoutBtn');
@@ -260,7 +258,7 @@ function submitRegister() {
     document.getElementById('registerError').innerHTML = 'Username required, password at least 6 characters';
     return;
   }
-  register({ username, password }).then(response => {
+  window.AppAPI.register({ username, password }).then(response => {
     if (response.ok) {
       document.getElementById('registerModal').style.display = 'none';
       showToast('Registered successfully. Please login.');
@@ -272,10 +270,7 @@ function submitRegister() {
 }
 
 function logout() {
-  authToken = null;
-  currentUsername = null;
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('username');
+  window.AppAPI.clearAuth();
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.style.display = 'none';
   updateUserDisplay();
@@ -287,6 +282,7 @@ function logout() {
 function updateUserDisplay() {
   const userDisplay = document.getElementById('userDisplay');
   if (userDisplay) {
+    const currentUsername = window.AppAPI.getCurrentUsername();
     userDisplay.textContent = currentUsername ? `Logged in as ${currentUsername}` : '';
   }
 }

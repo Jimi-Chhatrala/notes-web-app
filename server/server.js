@@ -1,4 +1,5 @@
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -7,7 +8,17 @@ const bcrypt = require('bcryptjs');
 const Database = require('./database');
 const app = express();
 const db = new Database();
-app.use(cors());
+const whitelist = [process.env.CLIENT_ORIGIN || 'http://localhost:5500', 'http://127.0.0.1:5500'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -18,9 +29,7 @@ function authenticateToken(req, res, next) {
   if (!token) return res.status(401).send('Access token required');
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    console.log('++++++++++++++++++++ err: ', err);
     if (err) return res.status(403).send('Invalid token');
-    console.log('++++++++++++++++++++ decoded: ', decoded);
     req.user = decoded;
     next();
   });
@@ -75,6 +84,7 @@ app.post('/register', authLimiter, async (req, res) => {
     if (error.code === 11000) {
       res.status(400).send('Username already exists');
     } else {
+      console.error('Error creating user:', error);
       res.status(500).send('Error creating user');
     }
   }
@@ -90,6 +100,7 @@ app.post('/login', authLimiter, async (req, res) => {
     const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.send({ token });
   } catch (error) {
+    console.error('Error logging in:', error);
     res.status(500).send('Error logging in');
   }
 });
@@ -104,6 +115,7 @@ app.post('/notes', authenticateToken, async (req, res) => {
     const data = await db.addNote(body);
     res.send(data);
   } catch (error) {
+    console.error('Error creating note:', error);
     res.status(500).send('Error creating note');
   }
 });
@@ -114,6 +126,7 @@ app.get('/notes', authenticateToken, async (req, res) => {
     const data = q ? await db.getNotesByQuery(req.user.id, q, parseInt(limit), parseInt(offset)) : await db.getNotes(req.user.id, parseInt(limit), parseInt(offset));
     res.send(data);
   } catch (error) {
+    console.error('Error fetching notes:', error);
     res.status(500).send('Error fetching notes');
   }
 });
@@ -130,6 +143,7 @@ app.get('/notes/:id', authenticateToken, async (req, res) => {
       res.send(data);
     }
   } catch (error) {
+    console.error('Error fetching note by id:', error);
     res.status(500).send('Error fetching note');
   }
 });
@@ -141,6 +155,7 @@ app.get('/health', async (req, res) => {
     await db.ensureConnected();
     res.json({ status: 'ok', db: true });
   } catch (e) {
+    console.error('Health check failed:', e);
     res.status(503).json({ status: 'unavailable', db: false });
   }
 });
@@ -164,6 +179,7 @@ app.put('/notes', authenticateToken, async (req, res) => {
       res.send(data);
     }
   } catch (error) {
+    console.error('Error updating note:', error);
     res.status(500).send('Error updating note');
   }
 });
@@ -181,6 +197,7 @@ app.delete('/notes/:id', authenticateToken, async (req, res) => {
       res.send(data);
     }
   } catch (error) {
+    console.error('Error deleting note:', error);
     res.status(500).send('Error deleting note');
   }
 });

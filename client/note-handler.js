@@ -7,7 +7,7 @@ function updateNotesTable(noteId, q) {
       if (!note) return;
       updateOrInsertRow(table, note);
       const row = document.getElementById(noteId);
-      if (row) row.setAttribute('style', 'animation: new-row 5s;');
+      if (row) row.style.animation = 'new-row 5s';
     }).catch(() => {
       // fallback to full refresh on error
       fullRefresh();
@@ -29,7 +29,7 @@ function updateNotesTable(noteId, q) {
     }).then(() => {
       if (noteId) {
         const row = document.getElementById(noteId);
-        if (row) row.setAttribute('style', 'animation: new-row 5s;');
+        if (row) row.style.animation = 'new-row 5s';
       }
     });
   }
@@ -132,6 +132,12 @@ function showToast(message, timeout = 3500) {
 function appendRowToTable(table, note) {
   const row = table.insertRow(-1);
   row.id = note._id;
+  
+  if (note.color && note.color !== '#ffffff') {
+    row.style.borderLeft = `5px solid ${note.color}`;
+  } else {
+    row.style.borderLeft = 'none';
+  }
   const cell0 = row.insertCell(0);
   const cell1 = row.insertCell(1);
   const cell2 = row.insertCell(2);
@@ -154,6 +160,11 @@ function appendRowToTable(table, note) {
 function updateOrInsertRow(table, note) {
   const existing = document.getElementById(note._id);
   if (existing) {
+    if (note.color && note.color !== '#ffffff') {
+      existing.style.borderLeft = `5px solid ${note.color}`;
+    } else {
+      existing.style.borderLeft = 'none';
+    }
     const pinStyle = note.isPinned ? 'color: #e6b800; opacity: 1;' : 'color: #555; opacity: 0.5;';
     existing.cells[0].innerHTML = `<a class="pin-btn" data-note-id="${note._id}" style="cursor: pointer; ${pinStyle}"><i class="fa-solid fa-thumbtack" style="font-size: 20px;"></i></a>`;
     existing.cells[1].textContent = note.title;
@@ -210,17 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const notesTable = document.getElementById('notes-table');
   if (notesTable) {
     notesTable.addEventListener('click', (ev) => {
-      const edit = ev.target.closest ? ev.target.closest('.edit-btn') : null;
-      if (edit) {
+      // Find the closest ancestor an element that has a data-note-id attribute
+      let target = ev.target;
+      while (target && target !== notesTable && !target.getAttribute('data-note-id')) {
+        target = target.parentNode;
+      }
+      if (!target || target === notesTable) return;
+
+      const id = target.getAttribute('data-note-id');
+
+      if (target.classList.contains('edit-btn')) {
         ev.preventDefault();
-        const id = edit.getAttribute('data-note-id');
         openEditModal(id);
         return;
       }
-      const del = ev.target.closest ? ev.target.closest('.delete-btn') : null;
-      if (del) {
+      
+      if (target.classList.contains('delete-btn')) {
         ev.preventDefault();
-        const id = del.getAttribute('data-note-id');
         const action = confirm('Are you sure you want to delete this note?');
         if (action) {
           window.AppAPI.deleteNote(id).then(() => {
@@ -233,10 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      const pin = ev.target.closest ? ev.target.closest('.pin-btn') : null;
-      if (pin) {
+      if (target.classList.contains('pin-btn')) {
         ev.preventDefault();
-        const id = pin.getAttribute('data-note-id');
         window.AppAPI.getNoteById(id).then((note) => {
           if (note) {
             note.isPinned = !note.isPinned;

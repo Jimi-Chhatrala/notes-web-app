@@ -25,6 +25,7 @@ function clearAddModal() {
   document.getElementById('addTitle').value = '';
   document.getElementById('addCategory').value = '';
   document.getElementById('addContent').value = '';
+  document.getElementById('addColor').value = '#ffffff';
   document.getElementById('addError').innerHTML = '';
 }
 
@@ -48,7 +49,8 @@ function saveNewNote() {
     return;
   }
   const categoryStr = document.getElementById('addCategory').value.trim() || 'General';
-  const noteData = { title: titleStr, content: contentStr, category: categoryStr };
+  const colorStr = document.getElementById('addColor').value || '#ffffff';
+  const noteData = { title: titleStr, content: contentStr, category: categoryStr, color: colorStr };
   window.AppAPI.addNote(noteData)
     .then((response) => {
       if (response.ok) {
@@ -145,6 +147,7 @@ function loadNoteData(noteId) {
     document.getElementById('editTitle').value = data.title;
     document.getElementById('editCategory').value = data.category || 'General';
     document.getElementById('editContent').value = data.content;
+    document.getElementById('editColor').value = data.color || '#ffffff';
   });
 }
 
@@ -170,7 +173,8 @@ function saveEditNote() {
     return;
   }
   const categoryStr = document.getElementById('editCategory').value.trim() || 'General';
-  const noteData = { _id: noteId, title: titleStr, content: contentStr, category: categoryStr };
+  const colorStr = document.getElementById('editColor').value || '#ffffff';
+  const noteData = { _id: noteId, title: titleStr, content: contentStr, category: categoryStr, color: colorStr };
   window.AppAPI.updateNote(noteData)
     .then((response) => {
       if (response.ok) {

@@ -128,6 +128,33 @@ function showToast(message, timeout = 3500) {
   }, timeout);
 }
 
+function timeSince(dateString) {
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + ' years ago';
+  
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + ' months ago';
+  
+  interval = seconds / 86400;
+  if (interval > 1) {
+    const days = Math.floor(interval);
+    if (days === 1) return 'Yesterday';
+    return days + ' days ago';
+  }
+  
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + ' hours ago';
+  
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + ' mins ago';
+
+  if (seconds < 30) return 'Just now';
+  return Math.floor(seconds) + ' secs ago';
+}
+
 // Helpers to insert/update rows safely (avoid innerHTML for user content)
 function appendRowToTable(table, note) {
   const row = table.insertRow(-1);
@@ -152,7 +179,7 @@ function appendRowToTable(table, note) {
   cell1.textContent = note.title;
   cell2.textContent = note.category || 'General';
   cell3.textContent = note.content;
-  cell4.textContent = new Date(note.updatedAt).toLocaleString();
+  cell4.textContent = timeSince(note.updatedAt);
   cell5.innerHTML = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
                      <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
 }
@@ -170,7 +197,7 @@ function updateOrInsertRow(table, note) {
     existing.cells[1].textContent = note.title;
     existing.cells[2].textContent = note.category || 'General';
     existing.cells[3].textContent = note.content;
-    existing.cells[4].textContent = new Date(note.updatedAt).toLocaleString();
+    existing.cells[4].textContent = timeSince(note.updatedAt);
     // update action cell attributes
     const pin = existing.querySelector('.pin-btn');
     const edit = existing.querySelector('.edit-btn');

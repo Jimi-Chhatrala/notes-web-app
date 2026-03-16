@@ -41,25 +41,6 @@ function searchNotes() {
   updateNotesTable(undefined, q);
 }
 
-function confirmDeleteNote(noteId) {
-  const action = confirm('Are you sure you want to delete this note?');
-  if (action == true) {
-    console.log('Attempting to delete note:', noteId);
-    window.AppAPI.deleteNote(noteId).then((response) => {
-      console.log('Delete response status:', response.status);
-      if (response.ok) {
-        // remove the deleted row from table if present
-        const row = document.getElementById(noteId);
-        if (row) row.parentNode.removeChild(row);
-      } else {
-        response.text().then(error => showToast('Delete failed: ' + error));
-      }
-    }).catch(error => {
-      console.error('Delete network error:', error);
-      showToast('Network error during delete');
-    });
-  }
-}
 
 // Auto-retry configuration (can be overridden via meta tags or window globals)
 const _metaRetryInitial = document.querySelector('meta[name="api-retry-initial-ms"]');
@@ -265,15 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (target.classList.contains('delete-btn')) {
         ev.preventDefault();
-        const action = confirm('Are you sure you want to delete this note?');
-        if (action) {
+        showConfirmModal('Are you sure you want to delete this note?', () => {
           window.AppAPI.deleteNote(id).then(() => {
             const row = document.getElementById(id);
             if (row) row.parentNode.removeChild(row);
           }).catch(() => {
             updateNotesTable();
           });
-        }
+        });
         return;
       }
       

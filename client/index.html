@@ -251,6 +251,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+      <div class="modal-content" style="width: 30%; margin-left: 35%; top: 35%;">
+        <div class="modal-header" style="background-color: #f44336;">
+          <span id="closeConfirm" class="close">&times;</span>
+          <h2>Confirm Action</h2>
+        </div>
+        <div class="modal-body">
+          <p id="confirmMessage" style="text-align: center; margin: 20px 0; font-size: 18px;"></p>
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button id="confirmYesBtn" type="button" class="action-button" style="background-color: #f44336;">Confirm</button>
+          <button id="confirmNoBtn" type="button" class="action-button" style="background-color: #9e9e9e;">Cancel</button>
+        </div>
+      </div>
+    </div>
     <script src="note-client.js"></script>
     <script src="note-handler.js"></script>
     <script src="modal-handler.js"></script>

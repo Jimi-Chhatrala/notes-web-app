@@ -201,6 +201,36 @@ function hideAuthBanner() {
   document.getElementById('auth-banner').style.display = 'none';
 }
 
+function showConfirmModal(message, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  const messageEl = document.getElementById('confirmMessage');
+  const yesBtn = document.getElementById('confirmYesBtn');
+  const noBtn = document.getElementById('confirmNoBtn');
+  const closeBtn = document.getElementById('closeConfirm');
+
+  messageEl.textContent = message;
+  modal.style.display = 'block';
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+
+  yesBtn.onclick = () => {
+    closeModal();
+    if (onConfirm) onConfirm();
+  };
+
+  noBtn.onclick = closeModal;
+  closeBtn.onclick = closeModal;
+
+  // Close when clicking outside
+  window.onclick = (event) => {
+    if (event.target == modal) {
+      closeModal();
+    }
+  };
+}
+
 function openLoginModal() {
   const modal = document.getElementById('loginModal');
   modal.style.display = 'block';

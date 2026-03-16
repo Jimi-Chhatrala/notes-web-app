@@ -122,8 +122,10 @@ app.post('/notes', authenticateToken, async (req, res) => {
 
 app.get('/notes', authenticateToken, async (req, res) => {
   try {
-    const { q, limit = 10, offset = 0 } = req.query;
-    const data = q ? await db.getNotesByQuery(req.user.id, q, parseInt(limit), parseInt(offset)) : await db.getNotes(req.user.id, parseInt(limit), parseInt(offset));
+    const { q, category, limit = 10, offset = 0 } = req.query;
+    const data = q 
+      ? await db.getNotesByQuery(req.user.id, q, parseInt(limit), parseInt(offset), category) 
+      : await db.getNotes(req.user.id, parseInt(limit), parseInt(offset), category);
     res.send(data);
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -145,6 +147,16 @@ app.get('/notes/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching note by id:', error);
     res.status(500).send('Error fetching note');
+  }
+});
+
+app.get('/categories', authenticateToken, async (req, res) => {
+  try {
+    const data = await db.getUserCategories(req.user.id);
+    res.send(data);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).send('Error fetching categories');
   }
 });
 

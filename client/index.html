@@ -27,52 +27,57 @@
       </div>
     </div>
 
-    <!-- Search bar -->
-    <div>
-      <button
-        id="addBtn"
-        class="action-button"
-        type="button">
-        Add
-      </button>
-      <input
-        id="searchInput"
-        type="text"
-        class="search-input"
-        placeholder="Search for notes by title, content, or category ..."/>
-      <button id="searchBtn" type="button" class="action-button">Search</button>
-    </div>
+    <div class="app-container">
+      <div id="sidebar" class="sidebar">
+        <ul id="categoryList" class="category-list">
+          <li class="category-item active" data-category="all">All Notes</li>
+          <!-- Dynamic categories will be injected here -->
+        </ul>
+      </div>
 
-    <!-- Status banner -->
-    <div id="status-banner" style="display:none;">
-      <span id="status-message">Backend unavailable</span>
-      <button id="reconnectBtn" class="reconnect-btn" type="button">Reconnect</button>
-    </div>
-    <div id="auth-banner" style="display:none;">
-      <span>Please log in to access your notes</span>
-      <button id="loginBtn" class="action-button" type="button">Login</button>
-    </div>
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div class="main-content">
+        <!-- Search bar -->
+        <div class="search-section">
+          <button
+            id="addBtn"
+            class="action-button"
+            type="button"
+            style="background-color: #4caf50;">
+            Add Note
+          </button>
+          <input
+            id="searchInput"
+            type="text"
+            class="search-input"
+            placeholder="Search for notes by title, content, or category ..."/>
+          <button id="searchBtn" type="button" class="action-button">Search</button>
+        </div>
 
-    <!-- Notes table -->
-    <table id="notes-table">
-      <colgroup>
-        <col span="1" style="width: 5%;" />
-        <col span="1" style="width: 15%;" />
-        <col span="1" style="width: 10%;" />
-        <col span="1" style="width: 45%;" />
-        <col span="1" style="width: 15%;" />
-        <col span="1" style="width: 10%;" />
-      </colgroup>
-      <tr>
-        <th>Pin</th>
-        <th>Title</th>
-        <th>Category</th>
-        <th>Content</th>
-        <th>Last Updated</th>
-        <th></th>
-      </tr>
-    </table>
+        <!-- Notes table -->
+        <table id="notes-table">
+          <colgroup>
+            <col span="1" style="width: 5%;" />
+            <col span="1" style="width: 15%;" />
+            <col span="1" style="width: 10%;" />
+            <col span="1" style="width: 45%;" />
+            <col span="1" style="width: 15%;" />
+            <col span="1" style="width: 10%;" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Pin</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Content</th>
+              <th>Last Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- Add Note Modal -->
     <div id="addNoteModal" class="modal">

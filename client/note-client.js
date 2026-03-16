@@ -85,14 +85,26 @@ function getAuthHeaders() {
   }
   window.AppAPI.getNoteById = getNoteById;
 
-  async function getNotes(q) {
-    let url = `${BASE_URL}/notes`;
-    if (q) url += `/?q=${q}`;
+  async function getNotes(q, category) {
+    let url = `${BASE_URL}/notes?`;
+    if (q) url += `q=${encodeURIComponent(q)}&`;
+    if (category && category !== 'all') url += `category=${encodeURIComponent(category)}&`;
     const response = await fetch(url, { headers: getAuthHeaders() });
     if (!response.ok) return [];
     try { return await response.json(); } catch (e) { return []; }
   }
   window.AppAPI.getNotes = getNotes;
+
+  async function getCategories() {
+    const response = await fetch(`${BASE_URL}/categories`, { headers: getAuthHeaders() });
+    if (!response.ok) return [];
+    try {
+      return await response.json();
+    } catch (e) {
+      return [];
+    }
+  }
+  window.AppAPI.getCategories = getCategories;
 
   async function getHealth() {
     try {

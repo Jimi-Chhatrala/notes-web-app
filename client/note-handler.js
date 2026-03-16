@@ -1,8 +1,12 @@
-function updateNotesTable(noteId, q) {
-  const table = document.getElementById('notes-table');
+let currentCategory = 'all';
+let isRefreshPending = false;
 
-  // If a single noteId is provided and no q filter, update/insert that row only
-  if (noteId && !q) {
+function updateNotesTable(noteId, q, category = currentCategory) {
+  const table = document.getElementById('notes-table');
+  currentCategory = category;
+
+  // If a single noteId is provided and no q filter or category filter, update/insert that row only
+  if (noteId && !q && category === 'all') {
     window.AppAPI.getNoteById(noteId).then((note) => {
       if (!note) return;
       updateOrInsertRow(table, note);
@@ -17,28 +21,64 @@ function updateNotesTable(noteId, q) {
 
   // Otherwise do full refresh (search or initial load)
   function fullRefresh() {
-    // remove existing rows
-    let rowCount = table.rows.length;
-    while (--rowCount) {
-      table.deleteRow(rowCount);
+    if (isRefreshPending) return;
+    isRefreshPending = true;
+
+    const tbody = table.querySelector('tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+    } else {
+      // backward compatibility
+      let rowCount = table.rows.length;
+      while (rowCount > 1) { 
+        table.deleteRow(--rowCount);
+      }
     }
-    window.AppAPI.getNotes(q).then((data) => {
+
+    const categoryParam = category === 'all' ? null : category;
+    window.AppAPI.getNotes(q, categoryParam).then((data) => {
       data.forEach((note) => {
         appendRowToTable(table, note);
       });
-    }).then(() => {
+    }).catch(err => {
+      console.error('Refresh failed:', err);
+    }).finally(() => {
+      isRefreshPending = false;
       if (noteId) {
         const row = document.getElementById(noteId);
         if (row) row.style.animation = 'new-row 5s';
       }
+      updateCategoriesList();
     });
   }
 
   fullRefresh();
 }
+
+function updateCategoriesList() {
+  const categoryList = document.getElementById('categoryList');
+  if (!categoryList) return;
+
+  window.AppAPI.getCategories().then((categories) => {
+    // Keep "All Notes" but clear others
+    const allItem = categoryList.querySelector('[data-category="all"]');
+    categoryList.innerHTML = '';
+    categoryList.appendChild(allItem);
+
+    categories.sort().forEach(cat => {
+      const li = document.createElement('li');
+      li.className = 'category-item';
+      if (currentCategory === cat) li.classList.add('active');
+      li.setAttribute('data-category', cat);
+      li.textContent = cat;
+      categoryList.appendChild(li);
+    });
+  });
+}
+
 function searchNotes() {
   const q = document.getElementById('searchInput').value;
-  updateNotesTable(undefined, q);
+  updateNotesTable(undefined, q, currentCategory);
 }
 
 
@@ -138,7 +178,8 @@ function timeSince(dateString) {
 
 // Helpers to insert/update rows safely (avoid innerHTML for user content)
 function appendRowToTable(table, note) {
-  const row = table.insertRow(-1);
+  const tbody = table.querySelector('tbody') || table;
+  const row = tbody.insertRow(-1);
   row.id = note._id;
   
   if (note.color && note.color !== '#ffffff') {
@@ -167,6 +208,13 @@ function appendRowToTable(table, note) {
 
 function updateOrInsertRow(table, note) {
   const existing = document.getElementById(note._id);
+  // Only update if it's still in the current category filter
+  if (currentCategory !== 'all' && note.category !== currentCategory) {
+    if (existing) existing.parentNode.removeChild(existing);
+    updateCategoriesList();
+    return;
+  }
+
   if (existing) {
     if (note.color && note.color !== '#ffffff') {
       existing.style.borderLeft = `5px solid ${note.color}`;
@@ -186,8 +234,10 @@ function updateOrInsertRow(table, note) {
     if (pin) pin.setAttribute('data-note-id', note._id);
     if (edit) edit.setAttribute('data-note-id', note._id);
     if (del) del.setAttribute('data-note-id', note._id);
+    updateCategoriesList();
   } else {
     appendRowToTable(table, note);
+    updateCategoriesList();
   }
 }
 
@@ -225,7 +275,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.style.display = 'inline-block';
   updateUserDisplay();
-  // Event delegation for edit/delete buttons
+
+  // Event delegation for category sidebar
+  const categoryList = document.getElementById('categoryList');
+  if (categoryList) {
+    categoryList.addEventListener('click', (ev) => {
+      const item = ev.target.closest('.category-item');
+      if (item) {
+        // Toggle active class
+        categoryList.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+
+        const cat = item.getAttribute('data-category');
+        updateNotesTable(undefined, document.getElementById('searchInput').value, cat);
+      }
+    });
+  }  // Event delegation for edit/delete buttons
   const notesTable = document.getElementById('notes-table');
   if (notesTable) {
     notesTable.addEventListener('click', (ev) => {
@@ -250,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
           window.AppAPI.deleteNote(id).then(() => {
             const row = document.getElementById(id);
             if (row) row.parentNode.removeChild(row);
+            updateCategoriesList();
           }).catch(() => {
             updateNotesTable();
           });

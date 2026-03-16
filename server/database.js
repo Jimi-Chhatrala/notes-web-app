@@ -55,9 +55,13 @@ class Database {
     return await newNote.save();
   }
 
-  async getNotes(userId, limit = 10, offset = 0) {
+  async getNotes(userId, limit = 10, offset = 0, category = null) {
     await this.ensureConnected();
-    return await Note.find({ userId }).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
+    const query = { userId };
+    if (category) {
+      query.category = category;
+    }
+    return await Note.find(query).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 
   async getNoteById(id) {
@@ -76,11 +80,19 @@ class Database {
     return await Note.findByIdAndDelete(id);
   }
 
-  async getNotesByQuery(userId, query, limit = 10, offset = 0) {
+  async getUserCategories(userId) {
+    await this.ensureConnected();
+    return await Note.distinct('category', { userId });
+  }
+
+  async getNotesByQuery(userId, query, limit = 10, offset = 0, category = null) {
     await this.ensureConnected();
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedQuery, 'i');
     const dbQuery = { userId, $or: [{ title: regex }, { content: regex }, { category: regex }] };
+    if (category) {
+      dbQuery.category = category;
+    }
     return await Note.find(dbQuery).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 

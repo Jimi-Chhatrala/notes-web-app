@@ -1,8 +1,13 @@
 let currentCategory = 'all';
 let isRefreshPending = false;
+let currentOffset = 0;
+const PAGE_SIZE = 10;
+let hasMoreNotes = true;
+let isFetchingPage = false;
 
-function updateNotesTable(noteId, q, category = currentCategory) {
+function updateNotesTable(noteId, q, category = currentCategory, append = false) {
   const table = document.getElementById('notes-table');
+  const tbody = table.querySelector('tbody');
   currentCategory = category;
 
   // If a single noteId is provided and no q filter or category filter, update/insert that row only
@@ -19,40 +24,64 @@ function updateNotesTable(noteId, q, category = currentCategory) {
     return;
   }
 
-  // Otherwise do full refresh (search or initial load)
+  // Otherwise do full refresh or append (search or scroll)
   function fullRefresh() {
-    if (isRefreshPending) return;
-    isRefreshPending = true;
+    if (isRefreshPending || isFetchingPage) return;
 
-    const tbody = table.querySelector('tbody');
-    if (tbody) {
-      tbody.innerHTML = '';
+    if (!append) {
+      isRefreshPending = true;
+      currentOffset = 0;
+      hasMoreNotes = true;
+      if (tbody) tbody.innerHTML = '';
     } else {
-      // backward compatibility
-      let rowCount = table.rows.length;
-      while (rowCount > 1) { 
-        table.deleteRow(--rowCount);
-      }
+      if (!hasMoreNotes) return;
+      isFetchingPage = true;
     }
 
     const categoryParam = category === 'all' ? null : category;
-    window.AppAPI.getNotes(q, categoryParam).then((data) => {
+    window.AppAPI.getNotes(q, categoryParam, PAGE_SIZE, currentOffset).then((data) => {
+      if (data.length < PAGE_SIZE) {
+        hasMoreNotes = false;
+      }
       data.forEach((note) => {
         appendRowToTable(table, note);
       });
+      currentOffset += data.length;
     }).catch(err => {
       console.error('Refresh failed:', err);
     }).finally(() => {
       isRefreshPending = false;
+      isFetchingPage = false;
+      const paginationSpinner = document.getElementById('pagination-loading');
+      if (paginationSpinner) paginationSpinner.style.display = 'none';
+
       if (noteId) {
         const row = document.getElementById(noteId);
         if (row) row.style.animation = 'new-row 5s';
       }
       updateCategoriesList();
+      
+      // Check if more notes are needed immediately (e.g., if screen isn't full)
+      if (hasMoreNotes) {
+        // Small delay to ensure DOM has updated
+        setTimeout(checkSentinelVisibility, 100);
+      }
     });
   }
 
   fullRefresh();
+}
+
+function checkSentinelVisibility() {
+  const sentinel = document.getElementById('scroll-sentinel');
+  if (!sentinel) return;
+  
+  const rect = sentinel.getBoundingClientRect();
+  const isVisible = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
+  
+  if (isVisible && hasMoreNotes && !isFetchingPage && !isRefreshPending) {
+     updateNotesTable(undefined, document.getElementById('searchInput').value, currentCategory, true);
+  }
 }
 
 function updateCategoriesList() {
@@ -78,7 +107,8 @@ function updateCategoriesList() {
 
 function searchNotes() {
   const q = document.getElementById('searchInput').value;
-  updateNotesTable(undefined, q, currentCategory);
+  // Search always resets pagination
+  updateNotesTable(undefined, q, currentCategory, false);
 }
 
 
@@ -293,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.classList.add('active');
 
         const cat = item.getAttribute('data-category');
-        updateNotesTable(undefined, document.getElementById('searchInput').value, cat);
+        updateNotesTable(undefined, document.getElementById('searchInput').value, cat, false);
       }
     });
   }  // Event delegation for edit/delete buttons
@@ -393,5 +423,27 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     // If no health endpoint available, still load notes once
     updateNotesTable();
+  }
+
+  // Infinite scroll logic
+  const sentinel = document.getElementById('scroll-sentinel');
+  const paginationSpinner = document.getElementById('pagination-loading');
+  
+  if (sentinel) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasMoreNotes && !isFetchingPage && !isRefreshPending) {
+          if (paginationSpinner) paginationSpinner.style.display = 'inline-block';
+          updateNotesTable(undefined, document.getElementById('searchInput').value, currentCategory, true);
+        } else if (!entry.isIntersecting || !hasMoreNotes) {
+          if (paginationSpinner) paginationSpinner.style.display = 'none';
+        }
+      });
+    }, {
+      rootMargin: '100px', // Trigger slightly before the user reaches the bottom
+      threshold: 0.1
+    });
+
+    observer.observe(sentinel);
   }
 });

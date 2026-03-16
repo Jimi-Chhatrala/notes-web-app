@@ -85,10 +85,12 @@ function getAuthHeaders() {
   }
   window.AppAPI.getNoteById = getNoteById;
 
-  async function getNotes(q, category) {
+  async function getNotes(q, category, limit, offset) {
     let url = `${BASE_URL}/notes?`;
     if (q) url += `q=${encodeURIComponent(q)}&`;
     if (category && category !== 'all') url += `category=${encodeURIComponent(category)}&`;
+    if (limit !== undefined) url += `limit=${limit}&`;
+    if (offset !== undefined) url += `offset=${offset}&`;
     const response = await fetch(url, { headers: getAuthHeaders() });
     if (!response.ok) return [];
     try { return await response.json(); } catch (e) { return []; }

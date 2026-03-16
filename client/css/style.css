@@ -276,3 +276,59 @@ tr:hover td {
     border-bottom-color: #0d6efd;
   }
 }
+
+/* Markdown Styles in Table */
+#notes-table td:nth-child(4) {
+  text-align: left;
+  line-height: 1.4;
+  vertical-align: top;
+  word-wrap: break-word; /* Support for older browsers */
+  overflow-wrap: anywhere; /* Ensures long strings break even without spaces */
+  max-width: 0; /* Important for flex/table word-wrap behavior */
+}
+
+#notes-table td:nth-child(4) * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+#notes-table td:nth-child(4) h1,
+#notes-table td:nth-child(4) h2,
+#notes-table td:nth-child(4) h3 {
+  margin: 10px 0 5px 0;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+#notes-table td:nth-child(4) ul,
+#notes-table td:nth-child(4) ol {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+#notes-table td:nth-child(4) p {
+  margin: 5px 0;
+}
+
+#notes-table td:nth-child(4) code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+#notes-table td:nth-child(4) pre {
+  background-color: #f0f0f0;
+  padding: 8px;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 5px 0;
+}
+
+#notes-table td:nth-child(4) blockquote {
+  border-left: 3px solid #ccc;
+  margin: 5px 0;
+  padding-left: 10px;
+  color: #666;
+  font-style: italic;
+}

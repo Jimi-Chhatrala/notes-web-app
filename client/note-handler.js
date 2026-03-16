@@ -200,7 +200,10 @@ function appendRowToTable(table, note) {
 
   cell1.textContent = note.title;
   cell2.textContent = note.category || 'General';
-  cell3.textContent = note.content;
+  // Render Markdown content
+  const rawHtml = typeof marked !== 'undefined' ? marked.parse(note.content) : note.content;
+  const cleanHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawHtml) : rawHtml;
+  cell3.innerHTML = cleanHtml;
   cell4.textContent = timeSince(note.updatedAt);
   cell5.innerHTML = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
                      <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
@@ -225,7 +228,10 @@ function updateOrInsertRow(table, note) {
     existing.cells[0].innerHTML = `<a class="pin-btn" data-note-id="${note._id}" style="cursor: pointer; ${pinStyle}"><i class="fa-solid fa-thumbtack" style="font-size: 20px;"></i></a>`;
     existing.cells[1].textContent = note.title;
     existing.cells[2].textContent = note.category || 'General';
-    existing.cells[3].textContent = note.content;
+    // Render Markdown content
+    const rawHtml = typeof marked !== 'undefined' ? marked.parse(note.content) : note.content;
+    const cleanHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawHtml) : rawHtml;
+    existing.cells[3].innerHTML = cleanHtml;
     existing.cells[4].textContent = timeSince(note.updatedAt);
     // update action cell attributes
     const pin = existing.querySelector('.pin-btn');

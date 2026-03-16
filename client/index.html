@@ -20,9 +20,20 @@
     <title>Notaty</title>
   </head>
   <body>
+    <!-- Health status banner -->
+    <div id="status-banner" style="display: none;">
+      <span id="status-message"></span>
+      <button id="reconnectBtn" class="reconnect-btn">Reconnect</button>
+    </div>
+
+    <!-- Auth requirement banner -->
+    <div id="auth-banner" style="display: none;">
+      <p>Please <a href="#" onclick="openLoginModal(); return false;">Login</a> or <a href="#" onclick="openRegisterModal(); return false;">Register</a> to manage your notes.</p>
+    </div>
+
     <div class="navigation-bar">
       <div class="navigation-container">
-        <i class="fa-solid fa-note-sticky" style="color: white; font-size: 40px; float: left; padding: 22px 10px 10px 0px;"></i>
+        <i class="fa-solid fa-note-sticky" style="color: white; font-size: 32px; padding: 10px 0;"></i>
         <h1>Notaty</h1>
         <span id="userDisplay"></span>
         <button id="logoutBtn" style="display:none;" class="action-button">Logout</button>
@@ -275,6 +286,10 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast container -->
+    <div id="toast" class="toast"></div>
+
     <script src="note-client.js"></script>
     <script src="note-handler.js"></script>
     <script src="modal-handler.js"></script>

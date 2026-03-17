@@ -19,8 +19,8 @@ const corsOptions = {
   }
 };
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
 // Auth middleware
 function authenticateToken(req, res, next) {
@@ -46,8 +46,8 @@ function validateNote(note) {
   if (note.title.length > 200) {
     return 'Title must be less than 200 characters';
   }
-  if (note.content.length > 5000) {
-    return 'Content must be less than 5000 characters';
+  if (note.content.length > 1000000) {
+    return 'Content must be less than 1,000,000 characters';
   }
   return null;
 }

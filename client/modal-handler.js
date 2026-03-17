@@ -1,3 +1,5 @@
+let addQuill, editQuill;
+
 function openAddModal() {
   if (!window.AppAPI.getAuthToken()) {
     showAuthBanner();
@@ -24,19 +26,21 @@ function openAddModal() {
 function clearAddModal() {
   document.getElementById('addTitle').value = '';
   document.getElementById('addCategory').value = '';
-  document.getElementById('addContent').value = '';
+  if (addQuill) addQuill.setText('');
   document.getElementById('addColor').value = '#ffffff';
   document.getElementById('addError').innerHTML = '';
 }
 
 function saveNewNote() {
   const titleStr = document.getElementById('addTitle').value.trim();
-  const contentStr = document.getElementById('addContent').value.trim();
+  const contentStr = addQuill ? addQuill.root.innerHTML.trim() : '';
+  const plainText = addQuill ? addQuill.getText().trim() : '';
+  
   if (!titleStr) {
     document.getElementById('addError').innerHTML = 'Title is required';
     return;
   }
-  if (!contentStr) {
+  if (!plainText || plainText === '') {
     document.getElementById('addError').innerHTML = 'Content is required';
     return;
   }
@@ -44,8 +48,8 @@ function saveNewNote() {
     document.getElementById('addError').innerHTML = 'Title must be less than 200 characters';
     return;
   }
-  if (contentStr.length > 5000) {
-    document.getElementById('addError').innerHTML = 'Content must be less than 5000 characters';
+  if (contentStr.length > 1000000) {
+    document.getElementById('addError').innerHTML = 'Content must be less than 1,000,000 characters';
     return;
   }
   const categoryStr = document.getElementById('addCategory').value.trim() || 'General';
@@ -96,44 +100,66 @@ function openEditModal(noteId) {
 
 // Wire up global event listeners (buttons) when scripts are loaded
 try {
-  const addBtn = document.getElementById('addBtn');
-  if (addBtn) addBtn.addEventListener('click', openAddModal);
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Quill editors
+    const quillOptions = {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link', 'image']
+        ]
+      }
+    };
+    
+    if (document.getElementById('addEditor')) {
+      addQuill = new Quill('#addEditor', quillOptions);
+    }
+    if (document.getElementById('editEditor')) {
+      editQuill = new Quill('#editEditor', quillOptions);
+    }
 
-  const searchBtn = document.getElementById('searchBtn');
-  if (searchBtn) searchBtn.addEventListener('click', () => {
-    // searchNotes is defined in note-handler.js
-    if (typeof searchNotes === 'function') searchNotes();
+    const addBtn = document.getElementById('addBtn');
+    if (addBtn) addBtn.addEventListener('click', openAddModal);
+
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) searchBtn.addEventListener('click', () => {
+      // searchNotes is defined in note-handler.js
+      if (typeof searchNotes === 'function') searchNotes();
+    });
+
+    const saveAddBtn = document.getElementById('saveAddNoteBtn');
+    if (saveAddBtn) saveAddBtn.addEventListener('click', saveNewNote);
+
+    const cancelAddBtn = document.getElementById('cancelAddNoteBtn');
+    if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => {
+      const modal = document.getElementById('addNoteModal');
+      if (modal) modal.style.display = 'none';
+    });
+
+    const saveEditBtn = document.getElementById('saveEditNoteBtn');
+    if (saveEditBtn) saveEditBtn.addEventListener('click', saveEditNote);
+
+    const cancelEditBtn = document.getElementById('cancelEditNoteBtn');
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => {
+      const modal = document.getElementById('editNoteModal');
+      if (modal) modal.style.display = 'none';
+    });
+
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
+
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    if (loginSubmitBtn) loginSubmitBtn.addEventListener('click', submitLogin);
+
+    const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+    if (registerSubmitBtn) registerSubmitBtn.addEventListener('click', submitRegister);
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
   });
-
-  const saveAddBtn = document.getElementById('saveAddNoteBtn');
-  if (saveAddBtn) saveAddBtn.addEventListener('click', saveNewNote);
-
-  const cancelAddBtn = document.getElementById('cancelAddNoteBtn');
-  if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => {
-    const modal = document.getElementById('addNoteModal');
-    if (modal) modal.style.display = 'none';
-  });
-
-  const saveEditBtn = document.getElementById('saveEditNoteBtn');
-  if (saveEditBtn) saveEditBtn.addEventListener('click', saveEditNote);
-
-  const cancelEditBtn = document.getElementById('cancelEditNoteBtn');
-  if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => {
-    const modal = document.getElementById('editNoteModal');
-    if (modal) modal.style.display = 'none';
-  });
-
-  const loginBtn = document.getElementById('loginBtn');
-  if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
-
-  const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-  if (loginSubmitBtn) loginSubmitBtn.addEventListener('click', submitLogin);
-
-  const registerSubmitBtn = document.getElementById('registerSubmitBtn');
-  if (registerSubmitBtn) registerSubmitBtn.addEventListener('click', submitRegister);
-
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) logoutBtn.addEventListener('click', logout);
 } catch (e) {
   // ignore when DOM not ready or in test environments
 }
@@ -146,7 +172,9 @@ function loadNoteData(noteId) {
   window.AppAPI.getNoteById(noteId).then((data) => {
     document.getElementById('editTitle').value = data.title;
     document.getElementById('editCategory').value = data.category || 'General';
-    document.getElementById('editContent').value = data.content;
+    if (editQuill) {
+      editQuill.root.innerHTML = data.content;
+    }
     document.getElementById('editColor').value = data.color || '#ffffff';
   });
 }
@@ -155,12 +183,14 @@ function saveEditNote() {
   const modal = document.getElementById('editNoteModal');
   const noteId = modal.getAttribute('noteid');
   const titleStr = document.getElementById('editTitle').value.trim();
-  const contentStr = document.getElementById('editContent').value.trim();
+  const contentStr = editQuill ? editQuill.root.innerHTML.trim() : '';
+  const plainText = editQuill ? editQuill.getText().trim() : '';
+
   if (!titleStr) {
     document.getElementById('editError').innerHTML = 'Title is required';
     return;
   }
-  if (!contentStr) {
+  if (!plainText || plainText === '') {
     document.getElementById('editError').innerHTML = 'Content is required';
     return;
   }
@@ -168,8 +198,8 @@ function saveEditNote() {
     document.getElementById('editError').innerHTML = 'Title must be less than 200 characters';
     return;
   }
-  if (contentStr.length > 5000) {
-    document.getElementById('editError').innerHTML = 'Content must be less than 5000 characters';
+  if (contentStr.length > 1000000) {
+    document.getElementById('editError').innerHTML = 'Content must be less than 1,000,000 characters';
     return;
   }
   const categoryStr = document.getElementById('editCategory').value.trim() || 'General';

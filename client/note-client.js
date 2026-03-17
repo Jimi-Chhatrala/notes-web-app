@@ -7,6 +7,18 @@
 
   let authToken = localStorage.getItem('authToken');
   let currentUsername = localStorage.getItem('username');
+  let currentUserId = localStorage.getItem('userId');
+
+  // Fallback: If userId is missing but we have a token, decode it
+  if (!currentUserId && authToken) {
+      try {
+          const payload = JSON.parse(atob(authToken.split('.')[1]));
+          currentUserId = payload.id;
+          localStorage.setItem('userId', currentUserId);
+      } catch (e) {
+          console.error('Failed to decode token for userId:', e);
+      }
+  }
 
   // Export functions/state via a namespace
   window.AppAPI = window.AppAPI || {};
@@ -15,9 +27,11 @@
   window.AppAPI.getCurrentUsername = () => currentUsername;
   window.AppAPI.setCurrentUsername = (username) => { currentUsername = username; localStorage.setItem('username', username); };
   window.AppAPI.clearAuth = () => { 
-    authToken = null; currentUsername = null; 
-    localStorage.removeItem('authToken'); localStorage.removeItem('username'); 
+    authToken = null; currentUsername = null; currentUserId = null;
+    localStorage.removeItem('authToken'); localStorage.removeItem('username'); localStorage.removeItem('userId');
   };
+  window.AppAPI.getCurrentUserId = () => currentUserId;
+  window.AppAPI.setCurrentUserId = (id) => { currentUserId = id; localStorage.setItem('userId', id); };
 
 function getAuthHeaders() {
   return authToken ? { 'Authorization': `Bearer ${authToken}`, 'content-type': 'application/json' } : { 'content-type': 'application/json' };
@@ -118,4 +132,50 @@ function getAuthHeaders() {
     }
   }
   window.AppAPI.getHealth = getHealth;
+
+  async function getSharedNotes(limit = 10, offset = 0) {
+    let url = `${BASE_URL}/notes/shared?`;
+    if (limit !== undefined) url += `limit=${limit}&`;
+    if (offset !== undefined) url += `offset=${offset}&`;
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    if (!response.ok) return [];
+    try { return await response.json(); } catch (e) { return []; }
+  }
+  window.AppAPI.getSharedNotes = getSharedNotes;
+
+  async function shareNote(noteId, username, permission) {
+    const response = await fetch(`${BASE_URL}/notes/${noteId}/share`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ username, permission })
+    });
+    return response;
+  }
+  window.AppAPI.shareNote = shareNote;
+
+  async function revokeShare(noteId, username) {
+    const response = await fetch(`${BASE_URL}/notes/${noteId}/share/${username}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return response;
+  }
+  window.AppAPI.revokeShare = revokeShare;
+
+  async function togglePublic(noteId, isPublic) {
+    const response = await fetch(`${BASE_URL}/notes/${noteId}/public`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ isPublic })
+    });
+    return response;
+  }
+  window.AppAPI.togglePublic = togglePublic;
+
+  async function getPublicNote(noteId) {
+    const response = await fetch(`${BASE_URL}/notes/public/${noteId}`);
+    if (!response.ok) return null;
+    try { return await response.json(); } catch (e) { return null; }
+  }
+  window.AppAPI.getPublicNote = getPublicNote;
 })();

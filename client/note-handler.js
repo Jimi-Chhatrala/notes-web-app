@@ -39,7 +39,15 @@ function updateNotesTable(noteId, q, category = currentCategory, append = false)
     }
 
     const categoryParam = category === 'all' ? null : category;
-    window.AppAPI.getNotes(q, categoryParam, PAGE_SIZE, currentOffset).then((data) => {
+    
+    let fetchPromise;
+    if (category === 'shared') {
+      fetchPromise = window.AppAPI.getSharedNotes(PAGE_SIZE, currentOffset);
+    } else {
+      fetchPromise = window.AppAPI.getNotes(q, categoryParam, PAGE_SIZE, currentOffset);
+    }
+
+    fetchPromise.then((data) => {
       if (data.length < PAGE_SIZE) {
         hasMoreNotes = false;
       }
@@ -89,12 +97,17 @@ function updateCategoriesList() {
   if (!categoryList) return;
 
   window.AppAPI.getCategories().then((categories) => {
-    // Keep "All Notes" but clear others
+    // Keep fixed items but clear others
     const allItem = categoryList.querySelector('[data-category="all"]');
+    const sharedItem = categoryList.querySelector('[data-category="shared"]');
     categoryList.innerHTML = '';
-    categoryList.appendChild(allItem);
+    if (allItem) categoryList.appendChild(allItem);
+    if (sharedItem) categoryList.appendChild(sharedItem);
 
     categories.sort().forEach(cat => {
+      // Don't duplicate 'all' or 'shared' if they happen to be in the categories list
+      if (cat === 'all' || cat === 'shared') return;
+      
       const li = document.createElement('li');
       li.className = 'category-item';
       if (currentCategory === cat) li.classList.add('active');
@@ -234,8 +247,24 @@ function appendRowToTable(table, note) {
   const cleanHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(note.content) : note.content;
   cell3.innerHTML = cleanHtml;
   cell4.textContent = timeSince(note.updatedAt);
-  cell5.innerHTML = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
-                     <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
+
+  const currentUserId = window.AppAPI.getCurrentUserId();
+  const isOwner = String(note.userId) === String(currentUserId);
+  
+  let actionsHtml = '';
+  if (isOwner) {
+    actionsHtml = `<a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>
+                   <a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
+                   <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
+  } else {
+    // Shared note
+    const sharedEntry = note.sharedWith.find(s => String(s.userId) === String(currentUserId));
+    if (sharedEntry && sharedEntry.permission === 'edit') {
+       actionsHtml = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>`;
+    }
+    cell2.innerHTML += ` <span style="font-size: 10px; background: #eee; padding: 2px 5px; border-radius: 4px; color: #666;">Shared</span>`;
+  }
+  cell5.innerHTML = actionsHtml;
 }
 
 function updateOrInsertRow(table, note) {
@@ -261,11 +290,17 @@ function updateOrInsertRow(table, note) {
     const cleanHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(note.content) : note.content;
     existing.cells[3].innerHTML = cleanHtml;
     existing.cells[4].textContent = timeSince(note.updatedAt);
+    
+    const currentUserId = window.AppAPI.getCurrentUserId();
+    const isOwner = String(note.userId) === String(currentUserId);
+
     // update action cell attributes
     const pin = existing.querySelector('.pin-btn');
+    const share = existing.querySelector('.share-btn');
     const edit = existing.querySelector('.edit-btn');
     const del = existing.querySelector('.delete-btn');
     if (pin) pin.setAttribute('data-note-id', note._id);
+    if (share) share.setAttribute('data-note-id', note._id);
     if (edit) edit.setAttribute('data-note-id', note._id);
     if (del) del.setAttribute('data-note-id', note._id);
     updateCategoriesList();
@@ -340,6 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target.classList.contains('edit-btn')) {
         ev.preventDefault();
         openEditModal(id);
+        return;
+      }
+
+      if (target.classList.contains('share-btn')) {
+        ev.preventDefault();
+        openShareModal(id);
         return;
       }
       

@@ -133,16 +133,48 @@ app.get('/notes', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/notes/shared', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 10, offset = 0 } = req.query;
+    const data = await db.getSharedNotes(req.user.id, parseInt(limit), parseInt(offset));
+    res.send(data);
+  } catch (error) {
+    console.error('Error fetching shared notes:', error);
+    res.status(500).send('Error fetching shared notes');
+  }
+});
+
+// Public read endpoint (No authentication required)
+app.get('/notes/public/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await db.getNoteById(id);
+    if (!data || !data.isPublic) {
+      res.status(404).send('Note not found or not public');
+    } else {
+      res.send(data);
+    }
+  } catch (error) {
+    console.error('Error fetching public note:', error);
+    res.status(500).send('Error fetching public note');
+  }
+});
+
 app.get('/notes/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const data = await db.getNoteById(id);
     if (!data) {
       res.status(404).send(`Note with id: (${id}) does not exist.`);
-    } else if (data.userId.toString() !== req.user.id) {
-      res.status(403).send('Access denied');
     } else {
-      res.send(data);
+      const isOwner = data.userId.toString() === req.user.id;
+      const isShared = data.sharedWith.some(s => s.userId.toString() === req.user.id);
+      
+      if (!isOwner && !isShared && !data.isPublic) {
+        res.status(403).send('Access denied');
+      } else {
+        res.send(data);
+      }
     }
   } catch (error) {
     console.error('Error fetching note by id:', error);
@@ -172,6 +204,41 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.post('/notes/:id/share', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, permission } = req.body;
+    const data = await db.shareNote(id, req.user.id, username, permission);
+    res.send(data);
+  } catch (error) {
+    console.error('Error sharing note:', error);
+    res.status(400).send(error.message);
+  }
+});
+
+app.delete('/notes/:id/share/:username', authenticateToken, async (req, res) => {
+  try {
+    const { id, username } = req.params;
+    const data = await db.revokeShare(id, req.user.id, username);
+    res.send(data);
+  } catch (error) {
+    console.error('Error revoking share:', error);
+    res.status(400).send(error.message);
+  }
+});
+
+app.post('/notes/:id/public', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isPublic } = req.body;
+    const data = await db.updatePublicStatus(id, req.user.id, isPublic);
+    res.send(data);
+  } catch (error) {
+    console.error('Error updating public status:', error);
+    res.status(400).send(error.message);
+  }
+});
+
 app.put('/notes', authenticateToken, async (req, res) => {
   try {
     const validationError = validateNote(req.body);
@@ -184,11 +251,23 @@ app.put('/notes', authenticateToken, async (req, res) => {
     const existing = await db.getNoteById(req.body._id);
     if (!existing) {
       res.status(404).send(`Note with id: (${req.body._id}) does not exist.`);
-    } else if (existing.userId.toString() !== req.user.id) {
-      res.status(403).send('Access denied');
     } else {
-      const data = await db.updateNote(req.body);
-      res.send(data);
+      const isOwner = existing.userId.toString() === req.user.id;
+      const sharedEntry = existing.sharedWith.find(s => s.userId.toString() === req.user.id);
+      const canEdit = isOwner || (sharedEntry && sharedEntry.permission === 'edit');
+
+      if (!canEdit) {
+        res.status(403).send('Access denied');
+      } else {
+        // Prevent shared users from changing ownership or sharing settings via PUT
+        if (!isOwner) {
+          delete req.body.userId;
+          delete req.body.sharedWith;
+          delete req.body.isPublic;
+        }
+        const data = await db.updateNote(req.body);
+        res.send(data);
+      }
     }
   } catch (error) {
     console.error('Error updating note:', error);

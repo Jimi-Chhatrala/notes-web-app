@@ -64,6 +64,55 @@ class Database {
     return await Note.find(query).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 
+  async getSharedNotes(userId, limit = 10, offset = 0) {
+    await this.ensureConnected();
+    return await Note.find({ 'sharedWith.userId': userId })
+      .sort({ updatedAt: -1 })
+      .limit(limit)
+      .skip(offset);
+  }
+
+  async shareNote(noteId, ownerId, targetUsername, permission = 'read') {
+    await this.ensureConnected();
+    const user = await this.getUserByUsername(targetUsername);
+    if (!user) throw new Error('User not found');
+    
+    const note = await Note.findOne({ _id: noteId, userId: ownerId });
+    if (!note) throw new Error('Note not found or unauthorized');
+
+    // Check if already shared
+    const existingIndex = note.sharedWith.findIndex(s => s.userId.toString() === user._id.toString());
+    if (existingIndex > -1) {
+      note.sharedWith[existingIndex].permission = permission;
+    } else {
+      note.sharedWith.push({ userId: user._id, username: user.username, permission });
+    }
+    
+    note.updatedAt = new Date();
+    return await note.save();
+  }
+
+  async revokeShare(noteId, ownerId, targetUsername) {
+    await this.ensureConnected();
+    const note = await Note.findOne({ _id: noteId, userId: ownerId });
+    if (!note) throw new Error('Note not found or unauthorized');
+
+    note.sharedWith = note.sharedWith.filter(s => s.username !== targetUsername);
+    note.updatedAt = new Date();
+    return await note.save();
+  }
+
+  async updatePublicStatus(noteId, ownerId, isPublic) {
+    await this.ensureConnected();
+    const note = await Note.findOneAndUpdate(
+      { _id: noteId, userId: ownerId },
+      { isPublic, updatedAt: new Date() },
+      { returnDocument: 'after' }
+    );
+    if (!note) throw new Error('Note not found or unauthorized');
+    return note;
+  }
+
   async getNoteById(id) {
     await this.ensureConnected();
     return await Note.findById(id);

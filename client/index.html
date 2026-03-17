@@ -45,6 +45,7 @@
       <div id="sidebar" class="sidebar">
         <ul id="categoryList" class="category-list">
           <li class="category-item active" data-category="all">All Notes</li>
+          <li class="category-item" data-category="shared">Shared with me</li>
           <!-- Dynamic categories will be injected here -->
         </ul>
       </div>
@@ -289,6 +290,67 @@
         <div class="modal-footer" style="text-align: center;">
           <button id="confirmYesBtn" type="button" class="action-button" style="background-color: #f44336;">Confirm</button>
           <button id="confirmNoBtn" type="button" class="action-button" style="background-color: #9e9e9e;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share Note Modal -->
+    <div id="shareNoteModal" class="modal">
+      <div class="modal-content" style="width: 40%; margin-left: 30%; top: 25%;">
+        <div class="modal-header">
+          <span id="closeShare" class="close">&times;</span>
+          <h2>Share Note</h2>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="left" style="width: 25%;">
+              <p>Username</p>
+            </div>
+            <div class="right" style="width: 75%;">
+              <input id="shareUsername" type="text" class="modal-input" placeholder="Invite registered user..." />
+            </div>
+          </div>
+          <div class="row">
+            <div class="left" style="width: 25%;">
+              <p>Permission</p>
+            </div>
+            <div class="right" style="width: 75%;">
+              <select id="sharePermission" class="modal-input">
+                <option value="read">Read Only</option>
+                <option value="edit">Can Edit</option>
+              </select>
+            </div>
+          </div>
+          <p id="shareError" class="error"></p>
+          
+          <div id="sharedUsersContainer" style="margin-top: 20px;">
+            <p style="font-weight: bold; margin-bottom: 10px;">Currently shared with:</p>
+            <ul id="sharedUsersList" style="list-style: none; padding: 0; margin: 0;">
+              <!-- Shared users will be listed here -->
+            </ul>
+          </div>
+
+          <hr style="margin: 20px 0; border: 0.5px solid #eee;" />
+          <div class="row">
+            <div class="left" style="width: 25%;">
+              <p>Public View</p>
+            </div>
+            <div class="right" style="width: 75%; display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+              <input type="checkbox" id="publicToggle" style="width: 20px; height: 20px; cursor: pointer;" />
+              <p style="margin: 0;">Enable public shareable link</p>
+            </div>
+          </div>
+          <div id="publicLinkContainer" style="display: none; margin-top: 15px;">
+            <p style="margin-bottom: 5px; font-weight: bold;">Shareable Link:</p>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="publicLinkInput" readonly class="modal-input" style="flex: 1;" />
+              <button id="copyLinkBtn" class="action-button" style="margin: 0; min-width: 80px;">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveShareBtn" type="button" class="action-button" style="background-color: #4caf50;">Share</button>
+          <button id="cancelShareBtn" type="button" class="action-button">Cancel</button>
         </div>
       </div>
     </div>

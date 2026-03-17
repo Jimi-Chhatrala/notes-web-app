@@ -159,6 +159,21 @@ try {
 
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    // Share Modal listeners
+    const saveShareBtn = document.getElementById('saveShareBtn');
+    if (saveShareBtn) saveShareBtn.addEventListener('click', saveShare);
+
+    const cancelShareBtn = document.getElementById('cancelShareBtn');
+    if (cancelShareBtn) cancelShareBtn.addEventListener('click', () => {
+      document.getElementById('shareNoteModal').style.display = 'none';
+    });
+
+    const publicToggle = document.getElementById('publicToggle');
+    if (publicToggle) publicToggle.addEventListener('change', togglePublicAction);
+
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyLink);
   });
 } catch (e) {
   // ignore when DOM not ready or in test environments
@@ -221,6 +236,172 @@ function saveEditNote() {
     .catch((error) => {
       document.getElementById('editError').innerHTML = 'Network error: ' + error.message;
     });
+}
+
+function openShareModal(noteId) {
+  const modal = document.getElementById('shareNoteModal');
+  modal.setAttribute('noteid', noteId);
+  modal.style.display = 'block';
+
+  document.getElementById('shareUsername').value = '';
+  document.getElementById('sharePermission').value = 'read';
+  document.getElementById('shareError').innerHTML = '';
+  document.getElementById('publicToggle').checked = false;
+  document.getElementById('publicLinkContainer').style.display = 'none';
+  document.getElementById('sharedUsersList').innerHTML = '<li style="color: #888;">Loading...</li>';
+
+  const closeShare = document.getElementById('closeShare');
+  closeShare.onclick = () => { modal.style.display = 'none'; };
+
+  updateSharedUsersList(noteId);
+
+  window.AppAPI.getNoteById(noteId).then(note => {
+    if (note) {
+      document.getElementById('publicToggle').checked = note.isPublic || false;
+      if (note.isPublic) {
+        showPublicLink(noteId);
+      }
+    }
+  });
+}
+
+function saveShare() {
+  const modal = document.getElementById('shareNoteModal');
+  const noteId = modal.getAttribute('noteid');
+  const username = document.getElementById('shareUsername').value.trim();
+  const permission = document.getElementById('sharePermission').value;
+
+  if (!username) {
+    document.getElementById('shareError').innerHTML = 'Username is required';
+    return;
+  }
+
+  window.AppAPI.shareNote(noteId, username, permission).then(res => {
+    if (res.ok) {
+      showToast(`Note shared with ${username}`);
+      document.getElementById('shareUsername').value = '';
+      updateSharedUsersList(noteId);
+    } else {
+      res.text().then(err => {
+        document.getElementById('shareError').innerHTML = err;
+      });
+    }
+  }).catch(err => {
+    document.getElementById('shareError').innerHTML = 'Sharing failed';
+  });
+}
+
+function updateSharedUsersList(noteId) {
+  const list = document.getElementById('sharedUsersList');
+  window.AppAPI.getNoteById(noteId).then(note => {
+    list.innerHTML = '';
+    if (!note.sharedWith || note.sharedWith.length === 0) {
+      list.innerHTML = '<li style="color: #888; font-style: italic;">Not shared with anyone yet.</li>';
+      return;
+    }
+
+    note.sharedWith.forEach(user => {
+      const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.justifyContent = 'space-between';
+      li.style.alignItems = 'center';
+      li.style.padding = '8px 0';
+      li.style.borderBottom = '1px solid #f9f9f9';
+
+      const info = document.createElement('div');
+      info.style.flex = '1';
+      
+      const nameSpan = document.createElement('strong');
+      nameSpan.textContent = user.username;
+      
+      const permSelect = document.createElement('select');
+      permSelect.style.marginLeft = '10px';
+      permSelect.style.fontSize = '12px';
+      permSelect.style.padding = '2px';
+      permSelect.style.border = '1px solid #ddd';
+      permSelect.style.borderRadius = '4px';
+      
+      const readOpt = document.createElement('option');
+      readOpt.value = 'read';
+      readOpt.textContent = 'Read Only';
+      readOpt.selected = user.permission === 'read';
+      
+      const editOpt = document.createElement('option');
+      editOpt.value = 'edit';
+      editOpt.textContent = 'Can Edit';
+      editOpt.selected = user.permission === 'edit';
+      
+      permSelect.appendChild(readOpt);
+      permSelect.appendChild(editOpt);
+      
+      permSelect.onchange = () => {
+          window.AppAPI.shareNote(noteId, user.username, permSelect.value).then(res => {
+              if (res.ok) {
+                  showToast(`Permission updated for ${user.username}`);
+              }
+          });
+      };
+
+      info.appendChild(nameSpan);
+      info.appendChild(permSelect);
+      
+      const revokeBtn = document.createElement('button');
+      revokeBtn.innerHTML = '<i class="fa-solid fa-user-minus"></i>';
+      revokeBtn.className = 'action-button';
+      revokeBtn.style.padding = '4px 8px';
+      revokeBtn.style.margin = '0';
+      revokeBtn.style.backgroundColor = '#f44336';
+      revokeBtn.onclick = () => {
+        if (confirm(`Revoke access for ${user.username}?`)) {
+          window.AppAPI.revokeShare(noteId, user.username).then(res => {
+            if (res.ok) {
+              showToast(`Access revoked for ${user.username}`);
+              updateSharedUsersList(noteId);
+            }
+          });
+        }
+      };
+
+      li.appendChild(info);
+      li.appendChild(revokeBtn);
+      list.appendChild(li);
+    });
+  });
+}
+
+function togglePublicAction() {
+  const modal = document.getElementById('shareNoteModal');
+  const noteId = modal.getAttribute('noteid');
+  const isPublic = document.getElementById('publicToggle').checked;
+
+  window.AppAPI.togglePublic(noteId, isPublic).then(res => {
+    if (res.ok) {
+      if (isPublic) {
+        showPublicLink(noteId);
+        showToast('Public link enabled');
+      } else {
+        document.getElementById('publicLinkContainer').style.display = 'none';
+        showToast('Public link disabled');
+      }
+    }
+  });
+}
+
+function showPublicLink(noteId) {
+  const container = document.getElementById('publicLinkContainer');
+  const input = document.getElementById('publicLinkInput');
+  container.style.display = 'block';
+  // Generate a URL relative to the current page's path
+  const currentUrl = window.location.href.split('?')[0].split('#')[0];
+  const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+  input.value = `${baseUrl}public-view.html?id=${noteId}`;
+}
+
+function copyLink() {
+  const input = document.getElementById('publicLinkInput');
+  input.select();
+  document.execCommand('copy');
+  showToast('Link copied to clipboard');
 }
 
 function showAuthBanner() {
@@ -298,9 +479,10 @@ function submitLogin() {
     if (response.ok) {
       response.json().then(data => {
         window.AppAPI.setAuthToken(data.token);
-        // Decode token to get username (without verification, for display only)
+        // Decode token to get username and id
         const payload = JSON.parse(atob(data.token.split('.')[1]));
         window.AppAPI.setCurrentUsername(payload.username);
+        window.AppAPI.setCurrentUserId(payload.id);
         document.getElementById('loginModal').style.display = 'none';
         hideAuthBanner();
         const logoutBtn = document.getElementById('logoutBtn');

@@ -1,139 +1,49 @@
-# Notaty - Note-Taking Application
+# Notaty - Modern Note-Taking & Collaboration Platform
 
-A full-stack note-taking application built with Node.js, Express, MongoDB, and vanilla JavaScript.
+Notaty is a full-stack, production-ready web application designed for seamless note management and real-time collaboration. Built with Node.js, Express, MongoDB, and a modern vanilla JS frontend.
 
-## Project Structure
+## 🚀 Key Features
 
-```
-notaty/
-├── client/               # Frontend files
-│   ├── notes.html       # Main HTML file
-│   ├── note-client.js   # API client functions
-│   ├── note-handler.js  # Note CRUD handler
-│   ├── modal-handler.js # Modal UI handler
-│   ├── css/             # Stylesheets
-│   └── images/          # Images
-├── server/              # Backend files
-│   ├── server.js        # Express server
-│   ├── database.js      # MongoDB database class
-│   ├── package.json     # Dependencies
-│   └── schemas/
-│       └── note.js      # Mongoose Note schema
-├── .env                 # Environment variables
-└── .gitignore          # Git ignore rules
-```
+### 📝 Rich Text Editing (WYSIWYG)
+- **Quill.js Integration**: Replace standard textareas with a professional word-processing experience.
+- **Formatting**: Full support for Bold, Italics, Underline, Bullet/Numbered Lists, and Headers.
+- **Image Support**: Paste high-resolution images directly into notes.
 
-## Installation
+### 🤝 Advanced Collaboration
+- **User Invitations**: Share notes with other registered users by their username.
+- **Granular Permissions**:
+  - **Read Only**: Invited users can view content but not change it.
+  - **Can Edit**: Full collaborative editing rights for invited users.
+- **Access Management**:
+  - **Permission Toggles**: Switch between View/Edit permissions at any time.
+  - **Revoke Access**: Instantly remove users from a shared note via the Share Modal.
+- **Shared Dashboard**: Dedicated "Shared with me" sidebar category for easy access to collaborative work.
 
-1. **Install MongoDB**
-   - Download from [mongodb.com](https://www.mongodb.com/try/download/community)
-   - Start the MongoDB service
+### 🔗 Public Shareable Links
+- **One-Click Sharing**: Toggle "Public View" to generate a unique, shareable URL.
+- **External Viewing**: Anyone with the link can view the note on a dedicated, distraction-free public page—no login required.
+- **Responsive Layout**: Images and content automatically adapt to fit any screen size.
 
-2. **Install Dependencies**
-   ```bash
-   cd server
-   npm install
-   ```
+### 🛠️ Performance & Scalability
+- **Infinite Scroll**: Utilizes `IntersectionObserver` for lazy-loading notes, ensuring a smooth experience even with thousands of entries.
+- **High-Payload Support**: Backend configured to handle large image uploads (up to 50MB per request).
+- **Efficient Search & Filtering**: Instant search by title/content and organization through dynamic categories.
 
-3. **Configure Environment**
-   - Edit `.env` file to change PORT, MONGODB_URL, JWT_SECRET, CORS_ORIGIN if needed
+### 🔒 Security First
+- **Sanitized Rendering**: Uses `DOMPurify` on both the main dashboard and public view to prevent XSS attacks.
+- **Permission Enforcement**: Robust backend checks ensure only owners can manage sharing, and only authorized users can edit or delete.
+- **JWT Authentication**: Secure login and registration with hashed passwords.
 
-4. **Start the Server**
-   ```bash
-   npm start        # Production
-   npm run start:dev # Development with auto-reload
-   ```
+## 🛠️ Tech Stack
+- **Frontend**: HTML5, Vanilla CSS3 (Custom Design), JavaScript (ES6+), Quill.js, DOMPurify.
+- **Backend**: Node.js, Express.js.
+- **Database**: MongoDB with Mongoose ODM.
+- **Auth**: JSON Web Tokens (JWT), Bcrypt.js.
 
-5. **Open Client**
-   - Open `client/notes.html` in your web browser
-   - Or serve with a local server: `python -m http.server 8000` (in client directory)
-
-## Features
-
-- User registration and login with JWT authentication
-- Create, read, update, delete notes
-- Search notes by title
-- Pagination for large note lists
-- Responsive UI with modals
-- Auto-retry for backend connectivity issues
-
-## API Endpoints
-
-- **POST /register** - Register a new user
-- **POST /login** - Login user
-- **POST /notes** - Create a new note (auth required)
-- **GET /notes** - Get user's notes (auth required, supports ?title=search&limit=10&offset=0)
-- **GET /notes?title=keyword** - Search user's notes by title
-- **GET /notes/:id** - Get a note by ID (auth required)
-- **PUT /notes** - Update a note (auth required)
-- **DELETE /notes/:id** - Delete a note (auth required)
-
-## Recent Improvements
-
-### Security
-- ✅ Added JWT-based user authentication
-- ✅ Fixed XSS vulnerability: Replaced `innerHTML` with `textContent` for user content
-- ✅ Added server-side input validation (title & content length checks, user credentials)
-- ✅ Sanitized error responses
-- ✅ Protected all note endpoints with auth middleware
-
-### Code Quality
-- ✅ Converted database methods to async/await
-- ✅ Removed unnecessary Promise wrapping
-- ✅ Removed all debug console.log statements
-- ✅ Removed commented-out dead code
-- ✅ Improved error handling with consistent error messages
-- ✅ Added response validation in client code
-- ✅ Added ESLint configuration for code linting
-- ✅ Added Jest tests for server routes
-
-### Bug Fixes
-- ✅ Fixed undefined `id` variable in PUT /notes endpoint
-- ✅ Added proper server startup with `app.listen()`
-- ✅ Ensured database connection is established on server start
-- ✅ Fixed missing data validation in add/edit note flows
-- ✅ Added ownership checks for note operations
-
-### Configuration & DevOps
-- ✅ Created `.env` file for environment configuration
-- ✅ Created `.gitignore` to exclude node_modules and sensitive files
-- ✅ Updated `package.json` with proper scripts and metadata
-- ✅ Added dotenv support for configuration management
-- ✅ Made BASE_URL dynamic (uses window.location.origin)
-- ✅ Removed deprecated body-parser, using Express built-ins
-
-### Performance
-- ✅ Simplified async operations with cleaner async/await syntax
-- ✅ Improved database method efficiency with { new: true } option in findByIdAndUpdate
-- ✅ Added database indexes on userId and title for faster queries
-- ✅ Implemented pagination for GET /notes to handle large datasets
-
-### Features
-- ✅ Added user registration and login
-- ✅ Added pagination support (limit/offset)
-- ✅ Added client-side auth checks and modals
-
-## Error Handling
-
-The application now provides:
-- Clear validation error messages for invalid input
-- Consistent HTTP status codes
-- User-friendly error messages in modals
-- Network error detection with fallback messages
-
-## Notes
-
-- MongoDB must be running for the application to work
-- Default server port: 3000
-- Ensure CORS is properly configured for cross-origin requests
-- The HTML file uses inline onclick handlers (could be refactored to event listeners in future)
-
-## Future Improvements
-
-- [ ] Add password reset functionality
-- [ ] Implement refresh token mechanism
-- [ ] Add note categories/tags
-- [ ] Add rich text editing
-- [ ] Add export to PDF/Markdown functionality
-- [ ] Implement rate limiting
-- [ ] Add unit tests for client-side code
+## 🚦 Getting Started
+1. **Prerequisites**: Ensure you have Node.js and MongoDB installed.
+2. **Environment**: Configure `.env` with `MONGODB_URL` and `JWT_SECRET`.
+3. **Installation**: Run `npm install` in the server directory.
+4. **Run**: 
+   - Start backend: `npm start` (usually port 3000)
+   - Open `client/index.html` (via Live Server or similar).

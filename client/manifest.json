@@ -1,0 +1,17 @@
+{
+  "name": "Notaty",
+  "short_name": "Notaty",
+  "description": "Modern Note-Taking & Collaboration Platform",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#008cba",
+  "icons": [
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -24,6 +24,11 @@ Notaty is a full-stack, production-ready web application designed for seamless n
 - **External Viewing**: Anyone with the link can view the note on a dedicated, distraction-free public page—no login required.
 - **Responsive Layout**: Images and content automatically adapt to fit any screen size.
 
+### 🌐 Full PWA Support
+- **Installable**: Add Notaty to your home screen or desktop for a native-like experience.
+- **Offline Access**: The app shells (HTML, CSS, JS) are cached via a Service Worker, allowing the UI to load without internet.
+- **Premium Icon**: Custom-generated high-resolution icon for a professional look on any device.
+
 ### 🛠️ Performance & Scalability
 - **Infinite Scroll**: Utilizes `IntersectionObserver` for lazy-loading notes, ensuring a smooth experience even with thousands of entries.
 - **High-Payload Support**: Backend configured to handle large image uploads (up to 50MB per request).

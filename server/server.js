@@ -1,6 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
+const crypto = require('crypto');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
@@ -57,6 +58,9 @@ function validateUser(user) {
   if (!user.username || !user.username.trim()) {
     return 'Username is required';
   }
+  if (!user.email || !user.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    return 'Valid email is required';
+  }
   if (!user.password || user.password.length < 6) {
     return 'Password must be at least 6 characters';
   }
@@ -72,21 +76,67 @@ const authLimiter = rateLimit({
 
 app.post('/register', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const validationError = validateUser({ username, password });
+    const { username, email, password } = req.body;
+    const validationError = validateUser({ username, email, password });
     if (validationError) {
       return res.status(400).send(validationError);
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await db.createUser({ username, password: hashedPassword });
+    await db.createUser({ username, email, password: hashedPassword });
     res.status(201).send({ message: 'User created' });
   } catch (error) {
     if (error.code === 11000) {
-      res.status(400).send('Username already exists');
+      res.status(400).send('Username or Email already exists');
     } else {
       console.error('Error creating user:', error);
       res.status(500).send('Error creating user');
     }
+  }
+});
+
+app.post('/forgot-password', authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).send('Email is required');
+    const user = await db.findUserByEmail(email);
+    if (!user) return res.status(404).send('User not found');
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const expiry = Date.now() + 3600000; // 1 hour
+
+    await db.setResetToken(user._id, token, expiry);
+
+    // In a real app, send email here. For now, log to console.
+    const resetUrl = `http://localhost:5500/client/index.html?token=${token}`;
+    console.log('\n---------------------------------');
+    console.log('PASSWORD RESET REQUEST');
+    console.log(`User: ${user.username}`);
+    console.log(`URL: ${resetUrl}`);
+    console.log('---------------------------------\n');
+
+    res.send('Reset link sent to your email (check server console)');
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).send('Error processing request');
+  }
+});
+
+app.post('/reset-password', authLimiter, async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password || password.length < 6) {
+      return res.status(400).send('Invalid input data');
+    }
+    const user = await db.findUserByResetToken(token);
+    if (!user) return res.status(400).send('Invalid or expired token');
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.updatePassword(user._id, hashedPassword);
+
+    res.send('Password reset successful');
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).send('Error resetting password');
   }
 });
 

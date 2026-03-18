@@ -174,6 +174,33 @@ try {
 
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyLink);
+
+    // New Password Reset Listeners
+    const openForgotBtn = document.getElementById('openForgotModal');
+    if (openForgotBtn) openForgotBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('loginModal').style.display = 'none';
+      openForgotModal();
+    });
+
+    const forgotSubmitBtn = document.getElementById('forgotSubmitBtn');
+    if (forgotSubmitBtn) forgotSubmitBtn.addEventListener('click', submitForgot);
+
+    const resetSubmitBtn = document.getElementById('resetSubmitBtn');
+    if (resetSubmitBtn) resetSubmitBtn.addEventListener('click', submitReset);
+
+    const closeForgot = document.getElementById('closeForgot');
+    if (closeForgot) closeForgot.onclick = () => document.getElementById('forgotPasswordModal').style.display = 'none';
+
+    const closeReset = document.getElementById('closeReset');
+    if (closeReset) closeReset.onclick = () => document.getElementById('resetPasswordModal').style.display = 'none';
+
+    // Check for reset token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    if (resetToken) {
+      openResetModal(resetToken);
+    }
   });
 } catch (e) {
   // ignore when DOM not ready or in test environments
@@ -498,21 +525,82 @@ function submitLogin() {
 }
 
 function submitRegister() {
-  const username = document.getElementById('registerUsername').value;
+  const username = document.getElementById('registerUsername').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
   const password = document.getElementById('registerPassword').value;
-  if (!username || password.length < 6) {
-    document.getElementById('registerError').innerHTML = 'Username required, password at least 6 characters';
+  
+  if (!username || !email || !password || password.length < 6) {
+    document.getElementById('registerError').innerHTML = 'All fields required, password at least 6 characters';
     return;
   }
-  window.AppAPI.register({ username, password }).then(response => {
+  
+  window.AppAPI.register({ username, email, password }).then(response => {
     if (response.ok) {
       document.getElementById('registerModal').style.display = 'none';
       showToast('Registered successfully. Please login.');
-      // Do not open login modal automatically, let user click Login button
     } else {
       response.text().then(error => document.getElementById('registerError').innerHTML = error);
     }
   }).catch(error => document.getElementById('registerError').innerHTML = 'Network error');
+}
+
+function openForgotModal() {
+  const modal = document.getElementById('forgotPasswordModal');
+  modal.style.display = 'block';
+  document.getElementById('forgotEmail').value = '';
+  document.getElementById('forgotError').innerHTML = '';
+}
+
+function submitForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) {
+    document.getElementById('forgotError').innerHTML = 'Email is required';
+    return;
+  }
+  
+  window.AppAPI.forgotPassword(email).then(response => {
+    if (response.ok) {
+      document.getElementById('forgotPasswordModal').style.display = 'none';
+      showToast('Reset link sent! Check your email (or server console).');
+    } else {
+      response.text().then(error => document.getElementById('forgotError').innerHTML = error);
+    }
+  }).catch(err => {
+    document.getElementById('forgotError').innerHTML = 'Network error';
+  });
+}
+
+function openResetModal(token) {
+  const modal = document.getElementById('resetPasswordModal');
+  modal.setAttribute('token', token);
+  modal.style.display = 'block';
+  document.getElementById('resetPassword').value = '';
+  document.getElementById('resetError').innerHTML = '';
+}
+
+function submitReset() {
+  const modal = document.getElementById('resetPasswordModal');
+  const token = modal.getAttribute('token');
+  const password = document.getElementById('resetPassword').value;
+
+  if (!password || password.length < 6) {
+    document.getElementById('resetError').innerHTML = 'Password must be at least 6 characters';
+    return;
+  }
+
+  window.AppAPI.resetPassword(token, password).then(response => {
+    if (response.ok) {
+      modal.style.display = 'none';
+      // Clear token from URL without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast('Password updated! You can now login.');
+      openLoginModal();
+    } else {
+      response.text().then(error => document.getElementById('resetError').innerHTML = error);
+    }
+  }).catch(err => {
+    document.getElementById('resetError').innerHTML = 'Network error';
+  });
 }
 
 function logout() {

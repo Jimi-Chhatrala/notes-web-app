@@ -20,6 +20,19 @@ class Database {
       await mongoose.connect(this.url, opts);
       this.connected = true;
       console.log('Database connected.');
+
+      // Migration: Assign placeholder emails to existing users who don't have one
+      const usersWithoutEmail = await User.find({ 
+        $or: [{ email: { $exists: false } }, { email: null }] 
+      });
+      if (usersWithoutEmail.length > 0) {
+        console.log(`Migrating ${usersWithoutEmail.length} users to include placeholder emails...`);
+        for (const user of usersWithoutEmail) {
+          user.email = `${user.username.toLowerCase()}@example.com`;
+          await user.save().catch(e => console.error(`Migration failed for ${user.username}:`, e.message));
+        }
+      }
+
       // Create indexes
       await Note.createIndexes({ userId: 1, title: 1 });
       await User.createIndexes({ username: 1 });
@@ -154,6 +167,36 @@ class Database {
   async getUserByUsername(username) {
     await this.ensureConnected();
     return await User.findOne({ username });
+  }
+
+  async findUserByEmail(email) {
+    await this.ensureConnected();
+    return await User.findOne({ email });
+  }
+
+  async setResetToken(userId, token, expiry) {
+    await this.ensureConnected();
+    return await User.findByIdAndUpdate(userId, {
+      resetPasswordToken: token,
+      resetPasswordExpires: expiry
+    });
+  }
+
+  async findUserByResetToken(token) {
+    await this.ensureConnected();
+    return await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+  }
+
+  async updatePassword(userId, hashedPassword) {
+    await this.ensureConnected();
+    return await User.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined
+    });
   }
 }
 

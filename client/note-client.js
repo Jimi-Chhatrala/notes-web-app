@@ -57,6 +57,26 @@ function getAuthHeaders() {
   }
   window.AppAPI.login = login;
 
+  async function forgotPassword(email) {
+    const response = await fetch(`${BASE_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return response;
+  }
+  window.AppAPI.forgotPassword = forgotPassword;
+
+  async function resetPassword(token, password) {
+    const response = await fetch(`${BASE_URL}/reset-password`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    return response;
+  }
+  window.AppAPI.resetPassword = resetPassword;
+
   async function addNote(noteData) {
     const response = await fetch(`${BASE_URL}/notes`, {
       method: 'POST',

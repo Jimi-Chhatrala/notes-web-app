@@ -243,6 +243,7 @@
           </div>
           <p id="loginError" class="error"></p>
           <p>Don't have an account? <a href="#" id="showRegister">Register</a></p>
+          <p><a href="#" id="openForgotModal">Forgot Password?</a></p>
         </div>
         <div class="modal-footer">
           <button id="loginSubmitBtn" type="button" class="action-button">Login</button>
@@ -275,11 +276,69 @@
               <input id="registerPassword" type="password" class="modal-input" />
             </div>
           </div>
+          <div class="row">
+            <div class="left">
+              <p>Email</p>
+            </div>
+            <div class="right">
+              <input id="registerEmail" type="email" class="modal-input" placeholder="your@email.com" />
+            </div>
+          </div>
           <p id="registerError" class="error"></p>
           <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
         </div>
         <div class="modal-footer">
           <button id="registerSubmitBtn" type="button" class="action-button">Register</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeForgot" class="close">&times;</span>
+          <h2>Forgot Password</h2>
+        </div>
+        <div class="modal-body">
+          <p>Enter your email to receive a reset link.</p>
+          <div class="row">
+            <div class="left">
+              <p>Email</p>
+            </div>
+            <div class="right">
+              <input id="forgotEmail" type="email" class="modal-input" placeholder="your@email.com" />
+            </div>
+          </div>
+          <p id="forgotError" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button id="forgotSubmitBtn" type="button" class="action-button">Send Reset Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="closeReset" class="close">&times;</span>
+          <h2>Reset Password</h2>
+        </div>
+        <div class="modal-body">
+          <p>Enter your new password below.</p>
+          <div class="row">
+            <div class="left">
+              <p>New Password</p>
+            </div>
+            <div class="right">
+              <input id="resetPassword" type="password" class="modal-input" placeholder="At least 6 characters" />
+            </div>
+          </div>
+          <p id="resetError" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button id="resetSubmitBtn" type="button" class="action-button">Update Password</button>
         </div>
       </div>
     </div>

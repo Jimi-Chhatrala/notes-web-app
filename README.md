@@ -24,6 +24,11 @@ Notaty is a full-stack, production-ready web application designed for seamless n
 - **External Viewing**: Anyone with the link can view the note on a dedicated, distraction-free public page—no login required.
 - **Responsive Layout**: Images and content automatically adapt to fit any screen size.
 
+### 🔐 Secure Password Reset
+- **Email-Linked Accounts**: Securely associate accounts with verified email addresses.
+- **Token-Based Recovery**: Time-limited (1-hour) secure tokens for password recovery.
+- **Auto-Migration**: Existing legacy accounts are automatically migrated to include placeholder emails for compatibility.
+
 ### 🌐 Full PWA Support
 - **Installable**: Add Notaty to your home screen or desktop for a native-like experience.
 - **Offline Access**: The app shells (HTML, CSS, JS) are cached via a Service Worker, allowing the UI to load without internet.

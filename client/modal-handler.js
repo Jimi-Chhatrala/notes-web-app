@@ -11,9 +11,10 @@ function openAddModal() {
   const closeSpan = document.getElementById('closeAdd');
   const cancelButton = document.getElementById('cancelAddNoteBtn');
 
-  clearAddModal();
-  // closeAdd (x)
-  // cancelAddNoteBtn (Cancel)
+  // Load draft if exists
+  if (!loadDraftFromLocalStorage()) {
+    clearAddModal();
+  }
 
   closeSpan.onclick = () => {
     modal.style.display = 'none';
@@ -58,6 +59,7 @@ function saveNewNote() {
   window.AppAPI.addNote(noteData)
     .then((response) => {
       if (response.ok) {
+        clearDraftFromLocalStorage(); // Clear draft on success
         const modal = document.getElementById('addNoteModal');
         modal.style.display = 'none';
         response.json().then(json => {
@@ -132,6 +134,15 @@ try {
 
     const saveAddBtn = document.getElementById('saveAddNoteBtn');
     if (saveAddBtn) saveAddBtn.addEventListener('click', saveNewNote);
+
+    // Auto-save listeners for Add Note
+    ['addTitle', 'addCategory', 'addColor'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', saveDraftToLocalStorage);
+    });
+    if (addQuill) {
+      addQuill.on('text-change', saveDraftToLocalStorage);
+    }
 
     const cancelAddBtn = document.getElementById('cancelAddNoteBtn');
     if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => {
@@ -487,6 +498,40 @@ function showConfirmModal(message, onConfirm) {
       closeModal();
     }
   };
+}
+
+// Draft Auto-Save Helpers
+function saveDraftToLocalStorage() {
+  const draft = {
+    title: document.getElementById('addTitle').value,
+    category: document.getElementById('addCategory').value,
+    color: document.getElementById('addColor').value,
+    content: addQuill ? addQuill.root.innerHTML : ''
+  };
+  localStorage.setItem('notaty_add_note_draft', JSON.stringify(draft));
+}
+
+function loadDraftFromLocalStorage() {
+  const saved = localStorage.getItem('notaty_add_note_draft');
+  if (!saved) return false;
+  
+  try {
+    const draft = JSON.parse(saved);
+    document.getElementById('addTitle').value = draft.title || '';
+    document.getElementById('addCategory').value = draft.category || 'General';
+    document.getElementById('addColor').value = draft.color || '#ffffff';
+    if (addQuill) {
+      addQuill.root.innerHTML = draft.content || '';
+    }
+    return true;
+  } catch (e) {
+    console.error('Failed to load draft:', e);
+    return false;
+  }
+}
+
+function clearDraftFromLocalStorage() {
+  localStorage.removeItem('notaty_add_note_draft');
 }
 
 function openLoginModal() {

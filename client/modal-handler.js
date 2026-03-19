@@ -198,6 +198,23 @@ try {
     const closeReset = document.getElementById('closeReset');
     if (closeReset) closeReset.onclick = () => document.getElementById('resetPasswordModal').style.display = 'none';
 
+    // Password Visibility Toggle Logic
+    document.querySelectorAll('.toggle-password').forEach(icon => {
+      icon.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (input.type === 'password') {
+          input.type = 'text';
+          this.classList.remove('fa-eye');
+          this.classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          this.classList.remove('fa-eye-slash');
+          this.classList.add('fa-eye');
+        }
+      });
+    });
+
     // Check for reset token in URL
     const urlParams = new URLSearchParams(window.location.search);
     const resetToken = urlParams.get('token');

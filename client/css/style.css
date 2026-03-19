@@ -356,6 +356,33 @@ tr:hover td {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Password Toggle Styles */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-wrapper .modal-input {
+    width: 100%;
+    padding-right: 40px !important; /* Make room for the eye icon */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+    font-size: 16px;
+    z-index: 10;
+}
+
+.toggle-password:hover {
+    color: #333;
+}
+
 #notes-table td:nth-child(4) * {
   max-width: 100%;
   overflow-wrap: anywhere;

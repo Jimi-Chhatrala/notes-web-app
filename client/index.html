@@ -250,7 +250,10 @@
               <p>Password</p>
             </div>
             <div class="right">
-              <input id="loginPassword" type="password" class="modal-input" />
+              <div class="password-wrapper">
+                <input id="loginPassword" type="password" class="modal-input" />
+                <i class="fa-solid fa-eye toggle-password" data-target="loginPassword"></i>
+              </div>
             </div>
           </div>
           <p id="loginError" class="error"></p>
@@ -285,7 +288,10 @@
               <p>Password</p>
             </div>
             <div class="right">
-              <input id="registerPassword" type="password" class="modal-input" />
+              <div class="password-wrapper">
+                <input id="registerPassword" type="password" class="modal-input" />
+                <i class="fa-solid fa-eye toggle-password" data-target="registerPassword"></i>
+              </div>
             </div>
           </div>
           <div class="row">
@@ -344,7 +350,10 @@
               <p>New Password</p>
             </div>
             <div class="right">
-              <input id="resetPassword" type="password" class="modal-input" placeholder="At least 6 characters" />
+              <div class="password-wrapper">
+                <input id="resetPassword" type="password" class="modal-input" placeholder="At least 6 characters" />
+                <i class="fa-solid fa-eye toggle-password" data-target="resetPassword"></i>
+              </div>
             </div>
           </div>
           <p id="resetError" class="error"></p>

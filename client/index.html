@@ -99,6 +99,18 @@
           </tbody>
         </table>
 
+        <!-- Empty State UI -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <img src="images/empty_notes.png" alt="No notes yet" class="empty-state-image" />
+          <div class="empty-state-content">
+            <h2>Your workspace is a blank canvas...</h2>
+            <p>Capture your thoughts, ideas, and reminders. Start by creating your first note!</p>
+            <button id="emptyAddBtn" class="action-button" style="background-color: #4caf50; padding: 12px 24px; font-size: 16px;">
+              <i class="fa-solid fa-plus" style="margin-right: 8px;"></i>Create First Note
+            </button>
+          </div>
+        </div>
+
         <!-- Infinite scroll sentinel -->
         <div id="scroll-sentinel" style="height: 20px; margin-top: 20px; text-align: center;">
           <div id="pagination-loading" class="spinner" style="display: none; border-top-color: #008cba; border-width: 3px; width: 24px; height: 24px;"></div>

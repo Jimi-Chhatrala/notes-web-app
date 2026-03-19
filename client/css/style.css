@@ -307,6 +307,55 @@ tr:hover td {
   max-width: 0; /* Important for flex/table word-wrap behavior */
 }
 
+#notes-table td img,
+.ql-editor img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Empty State Styles */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin: 40px auto;
+    max-width: 600px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.empty-state-image {
+    width: 280px;
+    height: auto;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+}
+
+.empty-state-content h2 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.empty-state-content p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 #notes-table td:nth-child(4) * {
   max-width: 100%;
   overflow-wrap: anywhere;

@@ -175,6 +175,9 @@ try {
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyLink);
 
+    const emptyAddBtn = document.getElementById('emptyAddBtn');
+    if (emptyAddBtn) emptyAddBtn.addEventListener('click', openAddModal);
+
     // New Password Reset Listeners
     const openForgotBtn = document.getElementById('openForgotModal');
     if (openForgotBtn) openForgotBtn.addEventListener('click', (e) => {

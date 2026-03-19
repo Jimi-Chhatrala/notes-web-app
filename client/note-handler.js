@@ -55,6 +55,17 @@ function updateNotesTable(noteId, q, category = currentCategory, append = false)
         appendRowToTable(table, note);
       });
       currentOffset += data.length;
+
+      // Show/hide empty state based on total rows
+      const totalRows = tbody.querySelectorAll('tr').length;
+      if (totalRows === 0 && !q && category === 'all') { // Only show empty state if no search/filter and no notes
+        table.style.display = 'none';
+        document.getElementById('empty-state').style.display = 'flex';
+      } else {
+        table.style.display = 'table';
+        document.getElementById('empty-state').style.display = 'none';
+      }
+
     }).catch(err => {
       console.error('Refresh failed:', err);
     }).finally(() => {

@@ -119,10 +119,11 @@ function getAuthHeaders() {
   }
   window.AppAPI.getNoteById = getNoteById;
 
-  async function getNotes(q, category, limit, offset) {
+  async function getNotes(q, category, limit, offset, archived = false) {
     let url = `${BASE_URL}/notes?`;
     if (q) url += `q=${encodeURIComponent(q)}&`;
-    if (category && category !== 'all') url += `category=${encodeURIComponent(category)}&`;
+    if (category && category !== 'all' && category !== 'archived') url += `category=${encodeURIComponent(category)}&`;
+    if (archived) url += `archived=true&`;
     if (limit !== undefined) url += `limit=${limit}&`;
     if (offset !== undefined) url += `offset=${offset}&`;
     const response = await fetch(url, { headers: getAuthHeaders() });

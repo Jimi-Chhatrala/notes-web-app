@@ -13,6 +13,7 @@ const noteSchema = mongoose.Schema({
     username: String // Store for easier display
   }],
   isPublic: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false },
   createdAt: { type: Date, required: true },
   updatedAt: { type: Date, required: true },
 });

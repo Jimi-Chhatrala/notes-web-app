@@ -38,13 +38,14 @@ function updateNotesTable(noteId, q, category = currentCategory, append = false)
       isFetchingPage = true;
     }
 
-    const categoryParam = category === 'all' ? null : category;
+    const categoryParam = (category === 'all' || category === 'archived') ? null : category;
+    const isArchived = category === 'archived';
     
     let fetchPromise;
     if (category === 'shared') {
       fetchPromise = window.AppAPI.getSharedNotes(PAGE_SIZE, currentOffset);
     } else {
-      fetchPromise = window.AppAPI.getNotes(q, categoryParam, PAGE_SIZE, currentOffset);
+      fetchPromise = window.AppAPI.getNotes(q, categoryParam, PAGE_SIZE, currentOffset, isArchived);
     }
 
     fetchPromise.then((data) => {
@@ -111,13 +112,16 @@ function updateCategoriesList() {
     // Keep fixed items but clear others
     const allItem = categoryList.querySelector('[data-category="all"]');
     const sharedItem = categoryList.querySelector('[data-category="shared"]');
+    const archivedItem = categoryList.querySelector('[data-category="archived"]');
+    
     categoryList.innerHTML = '';
     if (allItem) categoryList.appendChild(allItem);
     if (sharedItem) categoryList.appendChild(sharedItem);
+    if (archivedItem) categoryList.appendChild(archivedItem);
 
     categories.sort().forEach(cat => {
-      // Don't duplicate 'all' or 'shared' if they happen to be in the categories list
-      if (cat === 'all' || cat === 'shared') return;
+      // Don't duplicate fixed categories
+      if (cat === 'all' || cat === 'shared' || cat === 'archived') return;
       
       const li = document.createElement('li');
       li.className = 'category-item';
@@ -284,16 +288,22 @@ function appendRowToTable(table, note) {
   const currentUserId = window.AppAPI.getCurrentUserId();
   const isOwner = String(note.userId) === String(currentUserId);
   
+  // Archive/Restore icon based on state
+  const archiveIcon = note.isArchived ? 'fa-box-open' : 'fa-box-archive';
+  const archiveTitle = note.isArchived ? 'Restore' : 'Archive';
+
   // Download button is available for everyone who can see the note
   const downloadHtml = `<a class="download-btn" data-note-id="${note._id}" title="Download as .txt" style="cursor: pointer; color: #607d8b; margin-right: 15px;"><i class="fa-solid fa-file-arrow-down" style="font-size: 20px;"></i></a>`;
 
   let actionsHtml = downloadHtml;
   if (isOwner) {
-    actionsHtml += `<a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>
+    actionsHtml += `<a class="archive-btn" data-note-id="${note._id}" title="${archiveTitle}" style="cursor: pointer; color: #607d8b; margin-right: 15px;"><i class="fa-solid ${archiveIcon}" style="font-size: 20px;"></i></a>
+                    <a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>
                     <a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
                     <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
   } else {
     // Shared note
+    actionsHtml += `<a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>`;
     const sharedEntry = note.sharedWith.find(s => String(s.userId) === String(currentUserId));
     if (sharedEntry && sharedEntry.permission === 'edit') {
        actionsHtml += `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>`;
@@ -306,7 +316,11 @@ function appendRowToTable(table, note) {
 function updateOrInsertRow(table, note) {
   const existing = document.getElementById(note._id);
   // Only update if it's still in the current category filter
-  if (currentCategory !== 'all' && note.category !== currentCategory) {
+  const isInCategory = (currentCategory === 'all' && !note.isArchived) || 
+                       (currentCategory === 'archived' && note.isArchived) || 
+                       (currentCategory === note.category && !note.isArchived);
+
+  if (!isInCategory) {
     if (existing) existing.parentNode.removeChild(existing);
     updateCategoriesList();
     return;
@@ -439,6 +453,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target.classList.contains('download-btn')) {
         ev.preventDefault();
         downloadNoteAsTxt(id);
+        return;
+      }
+
+      if (target.classList.contains('archive-btn')) {
+        ev.preventDefault();
+        window.AppAPI.getNoteById(id).then((note) => {
+          if (note) {
+            note.isArchived = !note.isArchived;
+            window.AppAPI.updateNote(note).then(() => {
+              showToast(note.isArchived ? 'Note archived' : 'Note restored');
+              updateNotesTable();
+            });
+          }
+        });
         return;
       }
 

@@ -172,10 +172,11 @@ app.post('/notes', authenticateToken, async (req, res) => {
 
 app.get('/notes', authenticateToken, async (req, res) => {
   try {
-    const { q, category, limit = 10, offset = 0 } = req.query;
+    const { q, category, limit = 10, offset = 0, archived = 'false' } = req.query;
+    const isArchived = archived === 'true';
     const data = q 
-      ? await db.getNotesByQuery(req.user.id, q, parseInt(limit), parseInt(offset), category) 
-      : await db.getNotes(req.user.id, parseInt(limit), parseInt(offset), category);
+      ? await db.getNotesByQuery(req.user.id, q, parseInt(limit), parseInt(offset), category, isArchived) 
+      : await db.getNotes(req.user.id, parseInt(limit), parseInt(offset), category, isArchived);
     res.send(data);
   } catch (error) {
     console.error('Error fetching notes:', error);

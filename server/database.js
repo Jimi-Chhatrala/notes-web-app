@@ -68,9 +68,14 @@ class Database {
     return await newNote.save();
   }
 
-  async getNotes(userId, limit = 10, offset = 0, category = null) {
+  async getNotes(userId, limit = 10, offset = 0, category = null, archived = false) {
     await this.ensureConnected();
     const query = { userId };
+    if (archived) {
+      query.isArchived = true;
+    } else {
+      query.isArchived = { $ne: true };
+    }
     if (category) {
       query.category = category;
     }
@@ -147,11 +152,19 @@ class Database {
     return await Note.distinct('category', { userId });
   }
 
-  async getNotesByQuery(userId, query, limit = 10, offset = 0, category = null) {
+  async getNotesByQuery(userId, query, limit = 10, offset = 0, category = null, archived = false) {
     await this.ensureConnected();
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedQuery, 'i');
-    const dbQuery = { userId, $or: [{ title: regex }, { content: regex }, { category: regex }] };
+    const dbQuery = { 
+      userId, 
+      $or: [{ title: regex }, { content: regex }, { category: regex }] 
+    };
+    if (archived) {
+      dbQuery.isArchived = true;
+    } else {
+      dbQuery.isArchived = { $ne: true };
+    }
     if (category) {
       dbQuery.category = category;
     }

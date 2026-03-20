@@ -1,25 +1,24 @@
-* {
-  font-family: Helvetica;
-}
-
 textarea {
   width: 100%;
   height: 100px;
   font-size: 17px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
 }
 
 /* The Modal (background) */
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
+  z-index: 1000; /* Sit on top */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
   -webkit-animation-name: fadeIn; /* Fade in the background */
   -webkit-animation-duration: 0.4s;
   animation-name: fadeIn;
@@ -30,101 +29,123 @@ textarea {
 .modal-content {
   width: 50%;
   position: absolute;
-  top: 30%;
-  margin-left: 25%;
-  background-color: #fefefe;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--modal-bg);
+  color: var(--text-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   -webkit-animation-name: slideIn;
   -webkit-animation-duration: 0.4s;
   animation-name: slideIn;
   animation-duration: 0.4s;
+  overflow: hidden;
 }
 
 /* The Close X Button */
 .close {
-  color: white;
+  color: var(--text-color);
+  opacity: 0.5;
   float: right;
   font-size: 28px;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .close:hover,
 .close:focus {
-  color: #000;
+  opacity: 1;
   text-decoration: none;
-  cursor: pointer;
 }
 
 .modal-header {
-  padding: 2px 16px;
-  background-color: rgb(51, 51, 51);
-  color: white;
+  padding: 15px 20px;
+  background-color: var(--nav-bg);
+  color: var(--nav-text);
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
 }
 
 .modal-body {
-  padding: 2px 16px;
+  padding: 20px;
+  color: var(--text-color);
 }
 
 .modal-body p {
-    font-size: 17px;
-    padding: 0px;
-    margin-top: 9px;
+    font-size: 16px;
+    margin: 8px 0;
+    color: var(--text-color);
 }
 
 .modal-footer {
-  padding: 2px 16px;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  background-color: white;
-  color: white;
+  padding: 15px 20px;
+  background-color: var(--modal-bg);
+  border-top: 1px solid var(--sidebar-border);
+  text-align: right;
 }
 
 @-webkit-keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@-webkit-keyframes slideIn {
+  from { top: -300px; opacity: 0; }
+  to { top: 20%; opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { top: -300px; opacity: 0; }
+  to { top: 20%; opacity: 1; }
 }
 
 .row {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    width: 100%;
 }
 
 .left {
-  float: left;
-  width: 10%;
+  flex: 0 0 25%;
   text-align: left;
+  font-weight: 500;
 }
 
 .right {
-  float: left;
-  width: 90%;
+  flex: 1;
 }
 
 .modal-input {
   width: 100%;
-  height: 32px;
-  font-size: 17px;
+  height: 38px;
+  font-size: 16px;
+  padding: 8px 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.modal-input:focus {
+    border-color: var(--accent-color);
+    outline: none;
 }
 
 .error {
-  color: red; 
+  color: #ff5252; 
   text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
 }

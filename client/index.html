@@ -43,6 +43,14 @@
       <div class="navigation-container">
         <i class="fa-solid fa-note-sticky" style="color: white; font-size: 32px; padding: 10px 0;"></i>
         <h1>Notaty</h1>
+        <div class="theme-switch-wrapper">
+          <i class="fa-solid fa-sun theme-icon"></i>
+          <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+          </label>
+          <i class="fa-solid fa-moon theme-icon"></i>
+        </div>
         <span id="userDisplay"></span>
         <button id="logoutBtn" style="display:none;" class="action-button">Logout</button>
       </div>
@@ -148,7 +156,7 @@
               <p>Content</p>
             </div>
             <div class="right">
-              <div id="addEditor" style="height: 200px; background: white;"></div>
+              <div id="addEditor" style="height: 200px; background-color: var(--input-bg);"></div>
             </div>
           </div>
           <div class="row">
@@ -204,7 +212,7 @@
               <p>Content</p>
             </div>
             <div class="right">
-              <div id="editEditor" style="height: 200px; background: white;"></div>
+              <div id="editEditor" style="height: 200px; background-color: var(--input-bg);"></div>
             </div>
           </div>
           <div class="row">
@@ -366,8 +374,8 @@
 
     <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal">
-      <div class="modal-content" style="width: 30%; margin-left: 35%; top: 35%;">
-        <div class="modal-header" style="background-color: #f44336;">
+      <div class="modal-content" style="width: 30%;">
+        <div class="modal-header" style="background-color: var(--error-bg); border-bottom: 2px solid #cc0000; color: var(--error-text);">
           <span id="closeConfirm" class="close">&times;</span>
           <h2>Confirm Action</h2>
         </div>
@@ -375,15 +383,15 @@
           <p id="confirmMessage" style="text-align: center; margin: 20px 0; font-size: 18px;"></p>
         </div>
         <div class="modal-footer" style="text-align: center;">
-          <button id="confirmYesBtn" type="button" class="action-button" style="background-color: #f44336;">Confirm</button>
-          <button id="confirmNoBtn" type="button" class="action-button" style="background-color: #9e9e9e;">Cancel</button>
+          <button id="confirmYesBtn" type="button" class="action-button" style="background-color: #cc0000; border-color: #990000;">Confirm</button>
+          <button id="confirmNoBtn" type="button" class="action-button" style="background-color: var(--sidebar-border); border-color: var(--sidebar-border); color: var(--text-color);">Cancel</button>
         </div>
       </div>
     </div>
 
     <!-- Share Note Modal -->
     <div id="shareNoteModal" class="modal">
-      <div class="modal-content" style="width: 40%; margin-left: 30%; top: 25%;">
+      <div class="modal-content" style="width: 40%;">
         <div class="modal-header">
           <span id="closeShare" class="close">&times;</span>
           <h2>Share Note</h2>
@@ -448,6 +456,7 @@
     <!-- Quill.js library -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="note-client.js"></script>
+    <script src="theme-handler.js"></script>
     <script src="note-handler.js"></script>
     <script src="modal-handler.js"></script>
     

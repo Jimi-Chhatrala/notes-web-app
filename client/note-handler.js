@@ -230,6 +230,28 @@ function timeSince(dateString) {
   return Math.floor(seconds) + ' secs ago';
 }
 
+function downloadNoteAsTxt(id) {
+  window.AppAPI.getNoteById(id).then(note => {
+    if (!note) return;
+    const tempDiv = document.createElement('div');
+    // content is HTML, convert to plain text
+    tempDiv.innerHTML = note.content;
+    const plainText = tempDiv.innerText || tempDiv.textContent;
+    
+    const blob = new Blob([plainText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // Sanitize filename
+    const filename = (note.title || 'note').replace(/[/\\?%*:|"<>]/g, '-') + '.txt';
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
 // Helpers to insert/update rows safely (avoid innerHTML for user content)
 function appendRowToTable(table, note) {
   const tbody = table.querySelector('tbody') || table;
@@ -262,16 +284,19 @@ function appendRowToTable(table, note) {
   const currentUserId = window.AppAPI.getCurrentUserId();
   const isOwner = String(note.userId) === String(currentUserId);
   
-  let actionsHtml = '';
+  // Download button is available for everyone who can see the note
+  const downloadHtml = `<a class="download-btn" data-note-id="${note._id}" title="Download as .txt" style="cursor: pointer; color: #607d8b; margin-right: 15px;"><i class="fa-solid fa-file-arrow-down" style="font-size: 20px;"></i></a>`;
+
+  let actionsHtml = downloadHtml;
   if (isOwner) {
-    actionsHtml = `<a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>
-                   <a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
-                   <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
+    actionsHtml += `<a class="share-btn" data-note-id="${note._id}" style="cursor: pointer; color: #4caf50; margin-right: 15px;"><i class="fa-solid fa-share-nodes" style="font-size: 20px;"></i></a>
+                    <a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>
+                    <a class="delete-btn" data-note-id="${note._id}" style="cursor: pointer; color: #cc0000;"><i class="fa-solid fa-trash" style="font-size: 20px;"></i></a>`;
   } else {
     // Shared note
     const sharedEntry = note.sharedWith.find(s => String(s.userId) === String(currentUserId));
     if (sharedEntry && sharedEntry.permission === 'edit') {
-       actionsHtml = `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>`;
+       actionsHtml += `<a class="edit-btn" data-note-id="${note._id}" style="cursor: pointer; color: #008cba; margin-right: 15px;"><i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i></a>`;
     }
     cell2.innerHTML += ` <span style="font-size: 10px; background: #eee; padding: 2px 5px; border-radius: 4px; color: #666;">Shared</span>`;
   }
@@ -307,10 +332,12 @@ function updateOrInsertRow(table, note) {
 
     // update action cell attributes
     const pin = existing.querySelector('.pin-btn');
+    const download = existing.querySelector('.download-btn');
     const share = existing.querySelector('.share-btn');
     const edit = existing.querySelector('.edit-btn');
     const del = existing.querySelector('.delete-btn');
     if (pin) pin.setAttribute('data-note-id', note._id);
+    if (download) download.setAttribute('data-note-id', note._id);
     if (share) share.setAttribute('data-note-id', note._id);
     if (edit) edit.setAttribute('data-note-id', note._id);
     if (del) del.setAttribute('data-note-id', note._id);
@@ -409,6 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      if (target.classList.contains('download-btn')) {
+        ev.preventDefault();
+        downloadNoteAsTxt(id);
+        return;
+      }
+
       if (target.classList.contains('pin-btn')) {
         ev.preventDefault();
         window.AppAPI.getNoteById(id).then((note) => {

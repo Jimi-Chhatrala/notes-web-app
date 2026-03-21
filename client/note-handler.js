@@ -557,4 +557,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     observer.observe(sentinel);
   }
+
+  // Export functionality
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+  function triggerExport(format) {
+    const token = window.AppAPI.getAuthToken();
+    const url = `${window.BASE_URL || 'http://localhost:3000'}/notes/export?format=${format}`;
+    
+    fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Export failed');
+      return res.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `notaty_export_${Date.now()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      showToast(`${format.toUpperCase()} export started`);
+    })
+    .catch(err => {
+      console.error('Export error:', err);
+      showToast('Export failed');
+    });
+  }
+
+  if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', () => triggerExport('json'));
+  }
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => triggerExport('csv'));
+  }
 });

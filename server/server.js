@@ -195,6 +195,40 @@ app.get('/notes/shared', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/notes/export', authenticateToken, async (req, res) => {
+  try {
+    const { format = 'json' } = req.query;
+    const notes = await db.getAllNotes(req.user.id);
+
+    if (format === 'csv') {
+      const headers = ['id', 'title', 'category', 'content', 'isPinned', 'isArchived', 'isPublic', 'createdAt', 'updatedAt'];
+      const rows = notes.map(n => [
+        n._id,
+        `"${(n.title || '').replace(/"/g, '""')}"`,
+        `"${(n.category || 'General').replace(/"/g, '""')}"`,
+        `"${(n.content || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`, // Strip HTML for CSV
+        n.isPinned,
+        n.isArchived,
+        n.isPublic,
+        n.createdAt.toISOString(),
+        n.updatedAt.toISOString()
+      ].join(','));
+      
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=notaty_export_${Date.now()}.csv`);
+      return res.send(csvContent);
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=notaty_export_${Date.now()}.json`);
+    res.json(notes);
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).send('Error exporting data');
+  }
+});
+
 // Public read endpoint (No authentication required)
 app.get('/notes/public/:id', async (req, res) => {
   try {

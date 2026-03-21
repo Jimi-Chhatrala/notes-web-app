@@ -82,6 +82,11 @@ class Database {
     return await Note.find(query).sort({ isPinned: -1, updatedAt: -1 }).limit(limit).skip(offset);
   }
 
+  async getAllNotes(userId) {
+    await this.ensureConnected();
+    return await Note.find({ userId }).sort({ updatedAt: -1 });
+  }
+
   async getSharedNotes(userId, limit = 10, offset = 0) {
     await this.ensureConnected();
     return await Note.find({ 'sharedWith.userId': userId })

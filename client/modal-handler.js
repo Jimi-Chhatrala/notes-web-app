@@ -232,6 +232,22 @@ try {
     if (resetToken) {
       openResetModal(resetToken);
     }
+
+    // Settings / Security Modal
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const closeSettings = document.getElementById('closeSettings');
+
+    window.openSettingsModal = function() {
+      if (settingsModal) settingsModal.style.display = 'block';
+    };
+
+    if (settingsBtn) {
+      settingsBtn.onclick = window.openSettingsModal;
+    }
+    if (closeSettings) {
+      closeSettings.onclick = () => settingsModal.style.display = 'none';
+    }
   });
 } catch (e) {
   // ignore when DOM not ready or in test environments
@@ -493,11 +509,11 @@ function showConfirmModal(message, onConfirm) {
   closeBtn.onclick = closeModal;
 
   // Close when clicking outside
-  window.onclick = (event) => {
+  window.addEventListener('click', (event) => {
     if (event.target == modal) {
       closeModal();
     }
-  };
+  });
 }
 
 // Draft Auto-Save Helpers

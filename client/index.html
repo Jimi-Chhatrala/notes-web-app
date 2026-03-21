@@ -51,6 +51,9 @@
           </label>
           <i class="fa-solid fa-moon theme-icon"></i>
         </div>
+        <button id="settingsBtn" class="action-button" style="background: none; border: none; padding: 5px; margin-right: 10px;" title="Settings">
+          <i class="fa-solid fa-gear" style="color: white; font-size: 20px;"></i>
+        </button>
         <span id="userDisplay"></span>
         <button id="logoutBtn" style="display:none;" class="action-button">Logout</button>
       </div>
@@ -447,6 +450,35 @@
         <div class="modal-footer">
           <button id="saveShareBtn" type="button" class="action-button" style="background-color: #4caf50;">Share</button>
           <button id="cancelShareBtn" type="button" class="action-button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings / Security Modal -->
+    <div id="settingsModal" class="modal">
+      <div class="modal-content" style="width: 40%;">
+        <div class="modal-header">
+          <span id="closeSettings" class="close">&times;</span>
+          <h2>Security & Privacy</h2>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <i class="fa-solid fa-shield-halved" style="font-size: 48px; color: var(--accent-color); margin-bottom: 15px;"></i>
+            <h3>Export Your Data</h3>
+            <p>Download a complete archive of your notes for backup or portability. Your data is yours to keep.</p>
+          </div>
+          
+          <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+            <button id="exportJsonBtn" class="action-button" style="flex: 1; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-file-code"></i> Download JSON
+            </button>
+            <button id="exportCsvBtn" class="action-button" style="flex: 1; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #607d8b; border-color: #607d8b;">
+              <i class="fa-solid fa-file-csv"></i> Download CSV
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="action-button" onclick="document.getElementById('settingsModal').style.display='none'">Done</button>
         </div>
       </div>
     </div>
